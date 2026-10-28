@@ -9,12 +9,14 @@ setlocal EnableDelayedExpansion
 ::   sync-skills.bat dry          -> dry run semua
 ::   sync-skills.bat dry caveman  -> dry run caveman saja
 ::   sync-skills.bat nopush       -> merge lokal saja, tidak push
+::   sync-skills.bat force        -> paksa sync ulang semua (abaikan status up-to-date)
 
 set SCRIPT=%~dp0sync-skills.ps1
 set FILTER=all
 set DRYRUN=
 set SKIPPUSH=
 set CHECKONLY=
+set FORCE=
 
 :: Parse args
 :parse
@@ -22,6 +24,7 @@ if "%~1"=="" goto run
 if /i "%~1"=="check"  set CHECKONLY=-CheckOnly & shift & goto parse
 if /i "%~1"=="dry"    set DRYRUN=-DryRun       & shift & goto parse
 if /i "%~1"=="nopush" set SKIPPUSH=-SkipPush   & shift & goto parse
+if /i "%~1"=="force"  set FORCE=-Force         & shift & goto parse
 set FILTER=%~1
 shift
 goto parse
@@ -36,7 +39,7 @@ call :ask_token
 if not defined GITHUB_TOKEN exit /b 1
 
 :skip_token
-powershell -ExecutionPolicy Bypass -File "%SCRIPT%" -SkillFilter "%FILTER%" %DRYRUN% %SKIPPUSH% %CHECKONLY%
+powershell -ExecutionPolicy Bypass -File "%SCRIPT%" -SkillFilter "%FILTER%" %DRYRUN% %SKIPPUSH% %CHECKONLY% %FORCE%
 pause
 exit /b 0
 

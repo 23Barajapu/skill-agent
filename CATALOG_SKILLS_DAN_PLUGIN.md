@@ -1,6 +1,6 @@
 # 📚 Katalog Lengkap Skill & Plugin Antigravity
 
-> Dokumentasi resmi dan panduan referensi seluruh **106 Skill** dan **Plugin Lifecycle Hook** yang terpasang secara global di Google Antigravity (`~/.gemini/config/`).
+> Dokumentasi resmi dan panduan referensi seluruh **134 Skill** dan **Plugin Lifecycle Hook** yang terpasang secara global di Google Antigravity (`~/.gemini/config/`).
 
 ---
 
@@ -10,11 +10,15 @@
    - [RTK Plugin (CLI Proxy & Token Optimizer)](#1-rtk-plugin-cli-proxy--token-optimizer)
 3. [Katalog Skill Berdasarkan Kategori](#-katalog-skill-berdasarkan-kategori)
    - [Paket 1: Anti-Slop (6 Skill)](#paket-1-anti-slop-6-skill)
-   - [Paket 2: Caveman (20 Skill)](#paket-2-caveman-20-skill)
+   - [Paket 2: Caveman, Token Efficiency & Observability (26 Skill)](#paket-2-caveman-token-efficiency--observability-26-skill)
    - [Paket 3: Ponytail (6 Skill)](#paket-3-ponytail-6-skill)
    - [Paket 4: Agent Core Engineering (25 Skill)](#paket-4-agent-core-engineering-25-skill)
    - [Paket 5: Engineering & Productivity (37 Skill)](#paket-5-engineering--productivity-37-skill)
-   - [Paket 6: RTK Specialist (12 Skill)](#paket-6-rtk-specialist-12-skill)
+   - [Paket 6: RTK Specialist (13 Skill)](#paket-6-rtk-specialist-13-skill)
+   - [Paket 7: REA - Reverse Engineering Anything (5 Skill)](#paket-7-rea---reverse-engineering-anything-5-skill)
+   - [Paket 8: Apple Design, Motion & UI Polish (14 Skill)](#paket-8-apple-design-motion--ui-polish-14-skill)
+   - [Paket 9: Security Audit & Pen-Testing (1 Skill)](#paket-9-security-audit--pen-testing-1-skill)
+   - [Paket 10: Multi-Agent & Orchestration (1 Skill)](#paket-10-multi-agent--orchestration-1-skill)
 4. [Cara Kerja & Panduan Penggunaan Skill](#-cara-kerja--panduan-penggunaan-skill)
 
 ---
@@ -77,15 +81,15 @@ Filter khusus untuk mencegah keluaran AI generik (*slop*) dalam perancangan anta
 
 ---
 
-### Paket 2: Caveman (20 Skill)
+### Paket 2: Caveman, Token Efficiency & Observability (26 Skill)
 
-Rangkaian skill efisiensi token ekstrem, mode komunikasi terkompresi tanpa basa-basi, investigasi masalah secara sistematis, dan refactoring kode yang aman.
+Rangkaian skill efisiensi token ekstrem, mode komunikasi terkompresi tanpa basa-basi, investigasi masalah secara sistematis, pemetaan basis data graph, dan refactoring kode yang aman.
 
 | No | Nama Skill | Deskripsi & Kapan Digunakan |
 | :---: | :--- | :--- |
 | 1 | `cavecrew` | Mendelegasikan tugas ke sub-agen terfokus (`cavecrew-investigator` untuk pencarian kode, `cavecrew-builder` untuk edit 1-2 file, `cavecrew-reviewer` untuk review diff) agar output terkompresi dan konteks utama tetap hemat. |
 | 2 | `caveman` | Mode komunikasi ultra-ringkas yang memangkas token keluaran hingga batas maksimal dengan tetap mempertahankan seluruh fakta dan instruksi teknis secara akurat. |
-| 3 | `caveman-commit` | Menulis pesan Conventional Commits yang sangat padat dan fokus langsung pada niat/perubahan tanpa basa-basi. |
+| 3 | `caveman-commit` | Menulis pesan Conventional Commits padat dan terkompresi langsung pada niat/perubahan tanpa basa-basi. |
 | 4 | `caveman-compress` | Memadatkan file memori atau instruksi panjang (seperti CLAUDE.md atau daftar tugas) ke format ultra-padat untuk menghemat token masukan. |
 | 5 | `caveman-discover` | Menemukan dan melabeli setiap alur kerja LLM di repositori agar konsumsi token dapat dipantau dan dikelompokkan secara terukur. |
 | 6 | `caveman-evidence-review` | Memeriksa data metrik LLM (biaya, Cave Score, alur kerja, jejak panggilan/trace, latensi, galat, dan penghematan). |
@@ -103,6 +107,12 @@ Rangkaian skill efisiensi token ekstrem, mode komunikasi terkompresi tanpa basa-
 | 18 | `safe-refactor` | Merestrukturisasi kode sambil menjaga perilaku fungsional tetap utuh; memverifikasi sebelum dan sesudah perubahan struktural. |
 | 19 | `surgical-patch` | Memperbaiki bug atau perubahan perilaku kecil pada lapisan kode paling spesifik (*narrowest layer*) dengan bukti regresi dan pengujian yang tepat. |
 | 20 | `verify-and-stop` | Membuktikan bahwa pekerjaan yang ada telah memenuhi kriteria penerimaan tanpa memperlebar ruang lingkup tugas (*scope creep*). |
+| 21 | `bahasa-indonesia` | Memaksa seluruh respons, analisis, dan komunikasi AI selalu menggunakan Bahasa Indonesia yang fasih, ringkas, dan profesional secara konsisten. |
+| 22 | `graphify` | Menganalisis arsitektur repositori dan memetakan relasi dependensi berkas/simbol menjadi visual knowledge graph interaktif dan persisten. |
+| 23 | `megacave` | Mode kompresi token tingkat mega (register karakter ultra-minim) untuk efisiensi token ekstrem pada alur pemanggilan instruksi berulang. |
+| 24 | `ultracave` | Mode komunikasi ultra-padat (satu kata bila satu kata sudah cukup) guna memangkas konsumsi token keluaran ke titik terendah. |
+| 25 | `cave` | Utilitas kompresi caveman kilat untuk meringkas teks panjang atau file memori menjadi instruksi padat. |
+| 26 | `quality-control` | Audit kendali mutu *end-to-end* komprehensif lintas proyek (kode, pengujian, build, keamanan, dan integritas runtime) sebelum rilis atau merge. |
 
 ---
 
@@ -201,7 +211,7 @@ Koleksi skill tingkat lanjut (Matt Pocock dkk.) untuk wawancara teknis intensif 
 
 ---
 
-### Paket 6: RTK Specialist (12 Skill)
+### Paket 6: RTK Specialist (13 Skill)
 
 Skill audit, triage PR/isu GitHub, penyederhanaan kode Rust secara idiomatis, dan manajemen pengujian filter CLI token optimizer.
 
@@ -219,6 +229,64 @@ Skill audit, triage PR/isu GitHub, penyederhanaan kode Rust secara idiomatis, da
 | 10 | `security-guardian` | Analisis keamanan CLI untuk RTK: proteksi terhadap command injection, sanitasi shell escaping, dan pengamanan eksekusi lifecycle hook. |
 | 11 | `ship` | Alur kerja otomatisasi rilis: verifikasi build, pembaruan versi semantik (*version bump*), update changelog, git tagging, dan trigger pipeline CI/CD. |
 | 12 | `tdd-rust` | Alur kerja TDD khusus untuk pengembangan filter RTK: uji snapshot dengan `insta`, validasi batas penghematan token, dan pengujian regresi. |
+| 13 | `rtk` | Meta-skill integrasi proxy CLI RTK (Rust Token Killer) untuk memotong kuota token terminal secara transparan hingga 90%. |
+
+---
+
+### Paket 7: REA - Reverse Engineering Anything (5 Skill)
+
+Alat rekayasa balik (*reverse engineering*) tingkat lanjut untuk target biner native, aplikasi Electron/JavaScript terkompilasi, firmware, dan browser, serta perancangan lingkungan runtime agen.
+
+| No | Nama Skill | Deskripsi & Kapan Digunakan |
+| :---: | :--- | :--- |
+| 1 | `rea-analysis-optimization` | Menganalisis dan mengoptimalkan alur kerja investigasi rekayasa balik target biner atau bundel aplikasi. |
+| 2 | `rea-changelog-update` | Mengelola pembaruan changelog dan sinkronisasi versi rilis pada perkakas REA. |
+| 3 | `rea-ci-tests-audit` | Mengaudit pengujian CI/CD dan memverifikasi kelayakan runtime paket analisis REA. |
+| 4 | `rea-tool-design` | Panduan perancangan antarmuka tool agen REA, skema input, dan penanganan bukti eksekusi (*evidence*). |
+| 5 | `reverse-engineer-anything` | Rekayasa balik target biner native, aplikasi Electron, runtime browser, dan pembuatan lingkungan agen (AgentEnv). |
+
+---
+
+### Paket 8: Apple Design, Motion & UI Polish (14 Skill)
+
+Filosofi perancangan antarmuka visual kelas dunia Apple dan Emil Kowalski: fisika gerak fluida, mikro-animasi berperforma tinggi (60/120 FPS), interaksi sentuh mobile native, dan arsitektur Swift modern.
+
+| No | Nama Skill | Deskripsi & Kapan Digunakan |
+| :---: | :--- | :--- |
+| 1 | `animate` | Merancang animasi antarmuka dari awal: menentukan kurva easing, timing spring, durasi, interupsi transisi, dan animasi keluar (*exit*). |
+| 2 | `animate-expo` | Membangun animasi di React Native dan Expo menggunakan Reanimated, Gesture Handler, dan haptics perangkat. |
+| 3 | `animation-performance` | Menjaga animasi web tetap mulus di dalam batas frame budget (60/120fps) dengan menganimasikan properti composite-only dan meminimalkan main-thread jank. |
+| 4 | `animation-vocabulary` | Glosarium pencarian terbalik (*reverse-lookup*) untuk menerjemahkan deskripsi efek visual menjadi istilah teknis motion yang presisi. |
+| 5 | `apple-design` | Pendekatan desain antarmuka Apple: gerak fluida fisik, pegas kenyal, gestur sentuh/swipe, translusensi material, dan hierarki tipografi mendalam. |
+| 6 | `ask-sonner` | Panduan lengkap pustaka toast React Sonner: instalasi, konfigurasi Toaster, promise/loading toast, tema kustom, posisi, dan penanganan modal. |
+| 7 | `break-ui` | Menguji ketahanan komponen UI terhadap data kasus terburuk (*stress test*): nama sangat panjang, email tanpa spasi, angka ekstrim, dan zero-items. |
+| 8 | `emil-design-eng` | Filosofi rekayasa antarmuka Emil Kowalski: *UI polish*, perancangan komponen detail, animasi tak kasat mata, dan nuansa mikro yang membuat software terasa hidup. |
+| 9 | `find-animation-opportunities` | Memindai antarmuka atau kode untuk mengidentifikasi elemen-elemen statis yang layak diberi mikro-animasi guna meningkatkan interaktivitas. |
+| 10 | `improve-animations` | Audit komprehensif terhadap kode animasi dan transisi di seluruh repositori untuk menyusun rencana peningkatan kualitas gerak. |
+| 11 | `mobile-native` | Teknik CSS dan konfigurasi meta-tag agar aplikasi web terasa seperti aplikasi native di smartphone (mencegah double-tap zoom, pull-to-refresh glitch, dan lag sentuhan). |
+| 12 | `pick-ui-library` | Rekomendasi kurasi pustaka frontend terbaik dan teringan untuk kebutuhan spesifik tanpa membebani ukuran bundle aplikasi. |
+| 13 | `review-animations` | Tinjauan kritis terhadap implementasi kode animasi berdasarkan standar tinggi fisika gerak, kehalusan frame, dan interupsi gestur. |
+| 14 | `write-swift` | Rekayasa modern Swift: pemodelan value types, keamanan data-race Swift 6 (@concurrent, actors), protocol generics, dan performa alokasi ARC. |
+
+---
+
+### Paket 9: Security Audit & Pen-Testing (1 Skill)
+
+Audit keamanan mendalam, deteksi kerentanan OWASP, analisis API, sanitasi masukan tidak tepercaya, dan pengujian penetrasi menyeluruh.
+
+| No | Nama Skill | Deskripsi & Kapan Digunakan |
+| :---: | :--- | :--- |
+| 1 | `security-audit` | Panduan audit keamanan dan tinjauan kerentanan untuk basis kode, API, layanan latar belakang, CLI tools, dan manajemen dependensi pihak ketiga. |
+
+---
+
+### Paket 10: Multi-Agent & Orchestration (1 Skill)
+
+Integrasi ekosistem orkestrasi agen eksternal dan delegasi tugas otonom.
+
+| No | Nama Skill | Deskripsi & Kapan Digunakan |
+| :---: | :--- | :--- |
+| 1 | `hermes` | Integrasi dan orkestrasi komunikasi agen asisten Hermes ke dalam alur kerja Google Antigravity. |
 
 ---
 
@@ -227,14 +295,15 @@ Skill audit, triage PR/isu GitHub, penyederhanaan kode Rust secara idiomatis, da
 ### 1. Pemanggilan Otomatis oleh Model (*Model-Invoked*)
 Anda tidak perlu menghafal atau mengetikkan nama skill secara manual. Berikan instruksi dengan maksud yang jelas, agen akan secara cerdas mengenali skill yang relevan berdasarkan deskripsinya:
 - *Contoh*: `"Tolong review PR ini apakah ada over-engineering dan kode yang bisa dihapus"` -> Agen otomatis mengaktifkan skill ``ponytail-review`` atau ``code-simplification``.
-- *Contoh*: `"Grill ide arsitektur baru saya ini sebelum mulai coding"` -> Agen otomatis mengaktifkan skill ``grill-me`` atau ``interview-me``.
-- *Contoh*: `"Buatkan test terlebih dahulu sebelum mengimplementasikan fitur pembayaran ini"` -> Agen otomatis mengaktifkan skill ``test-driven-development`` atau ``tdd``.
+- *Contoh*: `"Buatkan animasi pembuka halaman login yang smooth ala Apple"` -> Agen otomatis mengaktifkan skill ``apple-design`` atau ``animate``.
+- *Contoh*: `"Audit keamanan endpoint pembayaran ini terhadap OWASP"` -> Agen otomatis mengaktifkan skill ``security-audit`` atau ``security-and-hardening``.
+- *Contoh*: `"Stress-test form input ini dengan worst-case data"` -> Agen otomatis mengaktifkan skill ``break-ui``.
 
 ### 2. Pemanggilan Eksplisit (*Explicit Invocation*)
 Anda juga dapat secara langsung menyebutkan nama skill dalam pesan Anda:
-- *Contoh*: `"Gunakan skill antislop-ui untuk merapikan halaman login ini."`
+- *Contoh*: `"Gunakan skill apple-design untuk memoles antarmuka modal ini."`
 - *Contoh*: `"Jalankan caveman mode untuk respon kali ini agar hemat token."`
-- *Contoh*: `"Gunakan skill security-and-hardening untuk mengaudit endpoint autentikasi."`
+- *Contoh*: `"Gunakan skill security-audit untuk menguji kerentanan API."`
 
 ---
-*Dokumen ini diperbarui untuk memastikan kompatibilitas universal di berbagai lingkungan pengguna (Windows, macOS, Linux).*
+*Dokumen ini diperbarui secara berkala dan memetakan seluruh 134 skill terpasang di Google Antigravity.*

@@ -28,16 +28,25 @@ if (-not (Test-Path $TargetDir)) {
 $repoBase = Split-Path -Parent $MyInvocation.MyCommand.Path
 if (-not $repoBase) { $repoBase = "c:\laragon\www\agent" }
 
-$sources = @(
-    @{ Repo = "agent-skills"; Path = Join-Path $repoBase "agent-skills\skills" },
-    @{ Repo = "anti-slop"; Path = Join-Path $repoBase "anti-slop\skills" },
-    @{ Repo = "caveman"; Path = Join-Path $repoBase "caveman\skills" },
-    @{ Repo = "engineering-skills"; Path = Join-Path $repoBase "engineering-skills\skills" },
-    @{ Repo = "ponytail-bara"; Path = Join-Path $repoBase "ponytail-bara\skills" },
-    @{ Repo = "rtk"; Path = Join-Path $repoBase "rtk\.claude\skills" }
-)
+# Auto-detect seluruh repository lokal yang memiliki folder skill
+$sources = @()
+Get-ChildItem -Path $repoBase -Directory | Where-Object { $_.Name -notmatch '^\.' -and $_.Name -ne 'mcp-bahasa-indonesia' -and $_.Name -ne 'skills' } | ForEach-Object {
+    $dir = $_
+    $candidates = @(
+        (Join-Path $dir.FullName "skills"),
+        (Join-Path $dir.FullName ".agents\skills"),
+        (Join-Path $dir.FullName ".claude\skills")
+    )
+    foreach ($c in $candidates) {
+        if (Test-Path $c) {
+            $sources += @{ Repo = $dir.Name; Path = $c }
+            break
+        }
+    }
+}
 
 $installed = 0
+$skipped = 0
 $errors = @()
 
 foreach ($s in $sources) {
@@ -46,13 +55,22 @@ foreach ($s in $sources) {
         continue
     }
 
-    $skills = Get-ChildItem -Path $s.Path -Filter "SKILL.md" -Recurse -File
+    $skills = @(Get-ChildItem -Path $s.Path -Filter "SKILL.md" -Recurse -File)
     Write-Host "[>>] Processing $($s.Repo) ($($skills.Count) skills)..." -ForegroundColor Cyan
 
     foreach ($sk in $skills) {
         $skillDir = $sk.Directory
         $skillName = $skillDir.Name
         $destPath = Join-Path $TargetDir $skillName
+
+        # Jika sudah terpasang dan tidak menggunakan -Force, lewati
+        if ((Test-Path $destPath) -and -not $Force) {
+            $destSkillMd = Join-Path $destPath "SKILL.md"
+            if (Test-Path $destSkillMd) {
+                $skipped++
+                continue
+            }
+        }
 
         try {
             if (Test-Path $destPath) {
@@ -85,11 +103,14 @@ foreach ($s in $sources) {
 }
 
 Write-Host "`n=== Installation Summary ===" -ForegroundColor Magenta
-Write-Host "Total skills installed globally: $installed" -ForegroundColor Green
+Write-Host "New skills installed    : $installed" -ForegroundColor Green
+Write-Host "Skipped (already exists): $skipped" -ForegroundColor Gray
 
 if ($errors.Count -gt 0) {
     Write-Host "Errors encountered: $($errors.Count)" -ForegroundColor Red
     $errors | Format-Table -AutoSize
+} elseif ($installed -gt 0) {
+    Write-Host "Skill baru berhasil dipasang dan siap digunakan di Antigravity!" -ForegroundColor Green
 } else {
-    Write-Host "All skills are successfully installed and ready in Antigravity!" -ForegroundColor Green
+    Write-Host "Semua skill sudah terpasang. Gunakan -Force jika ingin memasang ulang." -ForegroundColor Cyan
 }

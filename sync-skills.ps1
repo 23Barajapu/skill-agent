@@ -39,7 +39,8 @@ param(
     [switch]$DryRun,
     [switch]$SkipPush,
     [switch]$CheckOnly,
-    [switch]$SkipOrgCheck
+    [switch]$SkipOrgCheck,
+    [switch]$Force
 )
 
 Set-StrictMode -Version Latest
@@ -54,10 +55,36 @@ $CURRENT_SCRIPT_PATH = if ($PSCommandPath) {
     "C:\laragon\www\agent\sync-skills.ps1"
 }
 
-$LOCAL_SKILLS_DIR = "C:\Users\Administrator\.gemini\config\skills"
-$LOCAL_PLUGINS_DIR = "C:\Users\Administrator\.gemini\config\plugins"
+$LOCAL_SKILLS_DIR = if ($env:USERPROFILE) { Join-Path $env:USERPROFILE ".gemini\config\skills" } else { "C:\Users\Administrator\.gemini\config\skills" }
+$LOCAL_PLUGINS_DIR = if ($env:USERPROFILE) { Join-Path $env:USERPROFILE ".gemini\config\plugins" } else { "C:\Users\Administrator\.gemini\config\plugins" }
+$WORKSPACE_DIR = if ($CURRENT_SCRIPT_PATH) { Split-Path -Parent $CURRENT_SCRIPT_PATH } else { "c:\laragon\www\agent" }
+$SYNC_STATE_FILE = Join-Path $LOCAL_SKILLS_DIR ".sync-state.json"
 $REAL_TEMP = (Get-Item $env:TEMP).FullName
 $TEMP_DIR = Join-Path $REAL_TEMP "skill-sync-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+
+function Get-SyncState {
+    if (Test-Path $SYNC_STATE_FILE) {
+        try {
+            $raw = Get-Content -Path $SYNC_STATE_FILE -Raw -Encoding UTF8
+            if ($raw) {
+                $obj = $raw | ConvertFrom-Json
+                $hash = @{}
+                foreach ($prop in $obj.PSObject.Properties) {
+                    $hash[$prop.Name] = $prop.Value
+                }
+                return $hash
+            }
+        } catch {}
+    }
+    return @{}
+}
+
+function Save-SyncState([hashtable]$State) {
+    try {
+        $json = $State | ConvertTo-Json -Depth 5
+        [System.IO.File]::WriteAllText($SYNC_STATE_FILE, $json, [System.Text.UTF8Encoding]::new($false))
+    } catch {}
+}
 
 # Skill definitions
 $SKILL_MAP = @{
@@ -102,7 +129,7 @@ $SKILL_MAP = @{
     }
 
     'engineering-skills' = @{
-        upstream_repo        = "https://github.com/agent-bara/engineering-skills-bara.git"
+        upstream_repo        = "https://github.com/mattpocock/skills.git"
         upstream_skill_path  = "skills"
         local_skill_prefixes = @("ask-matt", "code-review", "codebase-design", "diagnosing-bugs",
                                   "domain-modeling", "grill-with-docs", "implement", "implement-spec",
@@ -118,7 +145,7 @@ $SKILL_MAP = @{
     }
 
     'agent-skills' = @{
-        upstream_repo        = "https://github.com/agent-bara/agent-skill-bara.git"
+        upstream_repo        = "https://github.com/addyosmani/agent-skills.git"
         upstream_skill_path  = "skills"
         local_skill_prefixes = @("api-and-interface-design", "browser-testing-with-devtools",
                                   "ci-cd-and-automation", "code-review-and-quality", "code-simplification",
@@ -141,6 +168,15 @@ $SKILL_MAP = @{
         local_skill_prefixes = @("hermes")
         backup_repo          = "https://github.com/agent-bara/hermes-bara.git"
         backup_branch        = "main"
+    }
+
+    'rea' = @{
+        upstream_repo        = "https://github.com/morluto/rea.git"
+        upstream_skill_path  = ".agents/skills"
+        local_skill_prefixes = @("rea-analysis-optimization", "rea-changelog-update",
+                                  "rea-ci-tests-audit", "rea-tool-design", "reverse-engineer-anything")
+        backup_repo          = "https://github.com/agent-bara/rea-bara.git"
+        backup_branch        = "personal-skills"
     }
 }
 
@@ -328,6 +364,122 @@ function Check-And-Update-OrgRepos {
         }
     if ($newCount -eq 0) {
         Write-Ok "Semua repo di $Org ($($orgRepos.Count) repo) sudah terdaftar di `$SKILL_MAP."
+    }
+}
+
+function Check-And-Update-LocalRepos {
+    param(
+        [string]$WorkspaceDir,
+        [string]$ScriptPath,
+        [switch]$DryRun
+    )
+
+    if (-not $WorkspaceDir -or -not (Test-Path $WorkspaceDir)) { return }
+
+    Write-Step "Mengecek apakah ada folder repository skill baru di direktori lokal..."
+    
+    # Kumpulkan seluruh nama skill dan key yang sudah terdaftar di $SKILL_MAP
+    $knownSkills = @{}
+    $knownKeys = @{}
+    foreach ($k in $SKILL_MAP.Keys) {
+        $knownKeys[$k.ToLower()] = $true
+        $knownKeys[($k -replace '-bara$', '' -replace '-', '').ToLower()] = $true
+        if ($SKILL_MAP[$k].local_skill_prefixes) {
+            foreach ($p in $SKILL_MAP[$k].local_skill_prefixes) {
+                $knownSkills[$p.ToLower()] = $true
+            }
+        }
+    }
+
+    $newCount = 0
+    Get-ChildItem -Path $WorkspaceDir -Directory | Where-Object { $_.Name -notmatch '^\.' -and $_.Name -ne 'mcp-bahasa-indonesia' } | ForEach-Object {
+        $dir = $_
+        $folderName = $dir.Name.ToLower()
+        $normName = ($folderName -replace '-bara$', '' -replace '-', '')
+
+        if ($knownKeys.ContainsKey($folderName) -or $knownKeys.ContainsKey($normName)) {
+            return
+        }
+
+        # Deteksi letak folder skill
+        $skillRelPath = $null
+        $candidates = @("skills", ".agents\skills", ".claude\skills")
+        foreach ($c in $candidates) {
+            $testPath = Join-Path $dir.FullName $c
+            if (Test-Path $testPath) {
+                $skillRelPath = $c.Replace('\', '/')
+                break
+            }
+        }
+
+        if (-not $skillRelPath) { return }
+
+        # Cari prefix / nama skill di dalamnya
+        $fullSkillPath = Join-Path $dir.FullName $skillRelPath
+        $skillDirs = Get-ChildItem -Path $fullSkillPath -Directory | Select-Object -ExpandProperty Name
+        if (-not $skillDirs -or $skillDirs.Count -eq 0) { return }
+
+        # Cek apakah skill-skill di dalamnya sudah pernah terdaftar di repo lain
+        $unregistered = @()
+        foreach ($sd in $skillDirs) {
+            if (-not $knownSkills.ContainsKey($sd.ToLower())) {
+                $unregistered += $sd
+            }
+        }
+        if ($unregistered.Count -eq 0) {
+            return
+        }
+
+        $newCount++
+        Write-Warn "Folder repo baru terdeteksi di lokal: $($dir.Name)"
+
+        # Baca git remote jika ada
+        $remotes = & git -C $dir.FullName remote -v 2>$null
+        $upstreamUrl = ""
+        $backupUrl = ""
+
+        if ($remotes) {
+            foreach ($line in ($remotes -split "`r?`n")) {
+                if ($line -match '^upstream\s+(\S+)\s+\(fetch\)') {
+                    $upstreamUrl = $Matches[1]
+                } elseif ($line -match '^origin\s+(\S+)\s+\(fetch\)') {
+                    $backupUrl = $Matches[1]
+                }
+            }
+        }
+
+        if (-not $upstreamUrl -and $backupUrl) { $upstreamUrl = $backupUrl }
+        if (-not $backupUrl -and $upstreamUrl) { $backupUrl = $upstreamUrl }
+        if (-not $backupUrl) {
+            $backupUrl = "https://github.com/agent-bara/$($dir.Name)-bara.git"
+            $upstreamUrl = $backupUrl
+        }
+
+        # Cek branch aktif
+        $branch = (& git -C $dir.FullName rev-parse --abbrev-ref HEAD 2>$null)
+        if (-not $branch -or $LASTEXITCODE -ne 0) { $branch = "main" }
+
+        $cleanKey = ($folderName -replace '-bara$', '')
+        $newConfig = @{
+            upstream_repo        = $upstreamUrl
+            upstream_skill_path  = $skillRelPath
+            local_skill_prefixes = @($skillDirs)
+            backup_repo          = $backupUrl
+            backup_branch        = $branch.Trim()
+        }
+
+        $SKILL_MAP[$cleanKey] = $newConfig
+        $knownKeys[$cleanKey] = $true
+        foreach ($sd in $skillDirs) { $knownSkills[$sd.ToLower()] = $true }
+        Write-Ok "Repo lokal '$cleanKey' ($($skillDirs.Count) skill) berhasil ditambahkan ke `$SKILL_MAP."
+
+        if (-not $DryRun -and $ScriptPath) {
+            Update-ScriptWithNewRepo -SkillKey $cleanKey -NewConfig $newConfig -ScriptPath $ScriptPath
+        }
+    }
+
+    if ($newCount -eq 0) {
+        Write-Ok "Semua folder skill di direktori lokal sudah terdaftar di `$SKILL_MAP."
     }
 }
 
@@ -558,7 +710,7 @@ function Clone-SkillToLocal {
 }
 
 function Sync-Skill {
-    param([string]$Name, [hashtable]$Config)
+    param([string]$Name, [hashtable]$Config, [hashtable]$SyncState)
 
     Write-Step "Syncing: $Name"
 
@@ -567,18 +719,43 @@ function Sync-Skill {
 
     $hasUpstream = ($Config.upstream_repo -and ($Config.upstream_repo -ne $Config.backup_repo))
     $total = @{ new = 0; updated = 0; kept = 0; conflicts = 0 }
+    $upstreamSha = $null
 
     if ($hasUpstream) {
+        $upstreamAuth = Get-AuthenticatedUrl $Config.upstream_repo
+
+        # Cek apakah upstream SHA sama dengan catatan sinkronisasi terakhir
+        try {
+            $lsOut = & git ls-remote $upstreamAuth HEAD 2>$null
+            if ($LASTEXITCODE -eq 0 -and $lsOut -match '^([0-9a-fA-F]{40})\s+') {
+                $upstreamSha = $Matches[1]
+            }
+        } catch {}
+
+        # Jika SHA sama dengan state terakhir dan tidak menggunakan -Force, langsung lewati
+        if ($upstreamSha -and -not $Force -and $SyncState.ContainsKey($Name)) {
+            $lastSha = $SyncState[$Name].upstream_sha
+            if ($lastSha -and $lastSha -eq $upstreamSha) {
+                Write-Ok "Upstream sudah sinkron (Commit: $($upstreamSha.Substring(0,7))). Dilewati."
+                return "skipped"
+            }
+        }
+
         $tempCloneDir = Join-Path $TEMP_DIR "${Name}-upstream"
         New-Item -ItemType Directory -Path $tempCloneDir -Force | Out-Null
 
         # 1. Clone upstream (shallow)
         Write-Info "Cloning upstream..."
-        $upstreamAuth = Get-AuthenticatedUrl $Config.upstream_repo
         $cloneOut = & git -c credential.helper= clone --depth 1 --quiet $upstreamAuth $tempCloneDir 2>&1
         if ($LASTEXITCODE -ne 0) {
             Write-Fail "Clone failed: $cloneOut"
-            return
+            return "failed"
+        }
+
+        # Dapatkan SHA dari clone jika ls-remote belum dapat
+        if (-not $upstreamSha) {
+            $headSha = (& git -C $tempCloneDir rev-parse HEAD 2>$null)
+            if ($headSha -and $LASTEXITCODE -eq 0) { $upstreamSha = $headSha.Trim() }
         }
 
         $upstreamSkillBase = Join-Path $tempCloneDir $Config.upstream_skill_path
@@ -586,6 +763,10 @@ function Sync-Skill {
         # 2. Merge each skill folder locally
         foreach ($prefix in $Config.local_skill_prefixes) {
             $upDir    = Join-Path $upstreamSkillBase $prefix
+            if (-not (Test-Path $upDir)) {
+                $nested = Get-ChildItem -Path $upstreamSkillBase -Filter $prefix -Directory -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+                if ($nested) { $upDir = $nested.FullName }
+            }
             $localDir = Join-Path $LOCAL_SKILLS_DIR $prefix
             if (-not (Test-Path $upDir)) {
                 Write-Info "  '$prefix' not in upstream (local-only)"
@@ -612,8 +793,15 @@ function Sync-Skill {
         Write-Ok "+$($total.new) new  ~$($total.updated) updated  =$($total.kept) kept  !$($total.conflicts) needs-review"
 
         if ($total.new -eq 0 -and $total.updated -eq 0) {
-            Write-Info "Nothing changed from upstream. Skipping push."
-            return
+            Write-Info "Tidak ada perubahan dari upstream. Dilewati (skip push)."
+            if ($upstreamSha -and -not $DryRun) {
+                $SyncState[$Name] = @{
+                    upstream_sha = $upstreamSha
+                    last_sync    = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
+                }
+                Save-SyncState $SyncState
+            }
+            return "skipped"
         }
     } else {
         Write-Info "Skill tidak memiliki upstream eksternal (backup lokal)."
@@ -622,7 +810,14 @@ function Sync-Skill {
     if ($DryRun -or $SkipPush) {
         if ($DryRun)   { Write-Info "[DryRun] Would push to $($Config.backup_repo) [$($Config.backup_branch)]" }
         if ($SkipPush) { Write-Info "SkipPush: local changes applied, no push." }
-        return
+        if ($upstreamSha -and -not $DryRun) {
+            $SyncState[$Name] = @{
+                upstream_sha = $upstreamSha
+                last_sync    = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
+            }
+            Save-SyncState $SyncState
+        }
+        return "ok"
     }
 
     # 3. Push to backup repo
@@ -637,7 +832,7 @@ function Sync-Skill {
         $cloneBackup2 = & git clone --depth 1 --quiet $backupAuth $tempBackupDir 2>&1
         if ($LASTEXITCODE -ne 0) {
             Write-Fail "Clone backup failed: $cloneBackup2"
-            return
+            return "failed"
         }
         Invoke-Git $tempBackupDir @("checkout", "-b", $Config.backup_branch) | Out-Null
     }
@@ -687,6 +882,16 @@ function Sync-Skill {
     } else {
         Write-Info "Backup repo already up to date."
     }
+
+    if ($upstreamSha) {
+        $SyncState[$Name] = @{
+            upstream_sha = $upstreamSha
+            last_sync    = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
+        }
+        Save-SyncState $SyncState
+    }
+
+    return "ok"
 }
 
 # ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Main ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
@@ -724,7 +929,10 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-# 1. Cek apakah ada repo baru di agent-bara dan update script jika ada
+# 1. Cek apakah ada folder repo baru di direktori lokal workspace
+Check-And-Update-LocalRepos -WorkspaceDir $WORKSPACE_DIR -ScriptPath $CURRENT_SCRIPT_PATH -DryRun:$DryRun
+
+# 2. Cek apakah ada repo baru di agent-bara dan update script jika ada
 if (-not $SkipOrgCheck) {
     Check-And-Update-OrgRepos -Org "agent-bara" -ScriptPath $CURRENT_SCRIPT_PATH -DryRun:$DryRun
 }
@@ -743,18 +951,21 @@ $selected = if ($SkillFilter -eq "all") {
     $SkillFilter -split "," | ForEach-Object { $_.Trim().ToLower() }
 }
 
+$syncState = Get-SyncState
 $results = @{}
+
 foreach ($name in $selected) {
     if (-not $SKILL_MAP.ContainsKey($name)) {
         Write-Warn "Unknown skill '$name'. Valid: $(($SKILL_MAP.Keys) -join ', ')"
         continue
     }
     try {
-        Sync-Skill -Name $name -Config $SKILL_MAP[$name]
-        $results[$name] = "ok"
+        $res = Sync-Skill -Name $name -Config $SKILL_MAP[$name] -SyncState $syncState
+        if (-not $res) { $res = "ok" }
+        $results[$name] = $res
     } catch {
         Write-Fail "Error: $_"
-        $results[$name] = "FAILED"
+        $results[$name] = "failed"
     }
 }
 
@@ -762,8 +973,14 @@ Remove-Item $TEMP_DIR -Recurse -Force -ErrorAction SilentlyContinue
 
 Write-Host "`n=== Summary ===" -ForegroundColor Magenta
 foreach ($k in $results.Keys) {
-    $color = if ($results[$k] -eq "ok") { "Green" } else { "Red" }
-    Write-Host "  $k : $($results[$k])" -ForegroundColor $color
+    $res = $results[$k]
+    if ($res -eq "ok") {
+        Write-Host "  [OK] $k : BERHASIL DISINKRONISASI" -ForegroundColor Green
+    } elseif ($res -eq "skipped") {
+        Write-Host "  [--] $k : DILEWATI (SUDAH TERUPDATE)" -ForegroundColor Cyan
+    } else {
+        Write-Host "  [XX] $k : GAGAL" -ForegroundColor Red
+    }
 }
 Write-Host "`nDone." -ForegroundColor Cyan
 
