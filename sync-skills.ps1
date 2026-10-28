@@ -178,6 +178,48 @@ $SKILL_MAP = @{
         backup_repo          = "https://github.com/agent-bara/rea-bara.git"
         backup_branch        = "personal-skills"
     }
+
+    'apple-design' = @{
+        upstream_repo        = "https://github.com/emilkowalski/skills.git"
+        upstream_skill_path  = "skills"
+        local_skill_prefixes = @("animate", "animate-expo", "animation-performance", "animation-vocabulary",
+                                  "apple-design", "ask-sonner", "break-ui", "emil-design-eng",
+                                  "find-animation-opportunities", "improve-animations", "mobile-native",
+                                  "pick-ui-library", "review-animations", "write-swift")
+        backup_repo          = "https://github.com/agent-bara/apple-design.git"
+        backup_branch        = "main"
+    }
+
+    'security-audit-skill' = @{
+        upstream_repo        = "https://github.com/cloudflare/security-audit-skill.git"
+        upstream_skill_path  = "skills"
+        local_skill_prefixes = @("security-audit")
+        backup_repo          = "https://github.com/agent-bara/security-audit-skill.git"
+        backup_branch        = "main"
+    }
+
+    'superpowers' = @{
+        upstream_repo        = "https://github.com/obra/superpowers.git"
+        upstream_skill_path  = "skills"
+        local_skill_prefixes = @("brainstorming", "diagnosing-superpowers", "dispatching-parallel-agents",
+                                  "executing-plans", "finishing-a-development-branch", "receiving-code-review",
+                                  "requesting-code-review", "subagent-driven-development", "systematic-debugging",
+                                  "using-git-worktrees", "using-superpowers",
+                                  "verification-before-completion", "writing-plans", "writing-skills")
+        local_plugin_path    = "superpowers"
+        backup_repo          = "https://github.com/agent-bara/superpowers-bara.git"
+        backup_branch        = "main"
+    }
+
+    'chrome-devtools-mcp' = @{
+        upstream_repo        = "https://github.com/ChromeDevTools/chrome-devtools-mcp.git"
+        upstream_skill_path  = "skills"
+        local_skill_prefixes = @("a11y-debugging", "chrome-devtools", "chrome-devtools-cli",
+                                  "cookie-debugging", "debug-optimize-lcp", "memory-leak-debugging",
+                                  "troubleshooting")
+        backup_repo          = "https://github.com/agent-bara/chrome-devtools-mcp-bara.git"
+        backup_branch        = "main"
+    }
 }
 
 function Write-Step([string]$msg) { Write-Host "`n[>>] $msg" -ForegroundColor Cyan }
@@ -416,7 +458,7 @@ function Check-And-Update-LocalRepos {
 
         # Cari prefix / nama skill di dalamnya
         $fullSkillPath = Join-Path $dir.FullName $skillRelPath
-        $skillDirs = Get-ChildItem -Path $fullSkillPath -Directory | Select-Object -ExpandProperty Name
+        $skillDirs = @(Get-ChildItem -Path $fullSkillPath -Directory | Select-Object -ExpandProperty Name)
         if (-not $skillDirs -or $skillDirs.Count -eq 0) { return }
 
         # Cek apakah skill-skill di dalamnya sudah pernah terdaftar di repo lain

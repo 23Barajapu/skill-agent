@@ -1,13 +1,14 @@
 # 📚 Katalog Lengkap Skill & Plugin Antigravity
 
-> Dokumentasi resmi dan panduan referensi seluruh **134 Skill** dan **Plugin Lifecycle Hook** yang terpasang secara global di Google Antigravity (`~/.gemini/config/`).
+> Dokumentasi resmi dan panduan referensi seluruh **155 Skill** dan **2 Plugin Antigravity** yang terpasang secara global di Google Antigravity (`~/.gemini/config/`).
 
 ---
 
 ## 📑 Daftar Isi
 1. [Arsitektur Customization Antigravity](#-arsitektur-customization-antigravity)
 2. [Plugin Antigravity](#-plugin-antigravity)
-   - [RTK Plugin (CLI Proxy & Token Optimizer)](#1-rtk-plugin-cli-proxy--token-optimizer)
+   - [1. RTK Plugin (CLI Proxy & Token Optimizer)](#1-rtk-plugin-cli-proxy--token-optimizer)
+   - [2. Superpowers Plugin (Agentic Workflow Methodology)](#2-superpowers-plugin-agentic-workflow-methodology)
 3. [Katalog Skill Berdasarkan Kategori](#-katalog-skill-berdasarkan-kategori)
    - [Paket 1: Anti-Slop (6 Skill)](#paket-1-anti-slop-6-skill)
    - [Paket 2: Caveman, Token Efficiency & Observability (26 Skill)](#paket-2-caveman-token-efficiency--observability-26-skill)
@@ -19,6 +20,8 @@
    - [Paket 8: Apple Design, Motion & UI Polish (14 Skill)](#paket-8-apple-design-motion--ui-polish-14-skill)
    - [Paket 9: Security Audit & Pen-Testing (1 Skill)](#paket-9-security-audit--pen-testing-1-skill)
    - [Paket 10: Multi-Agent & Orchestration (1 Skill)](#paket-10-multi-agent--orchestration-1-skill)
+   - [Paket 11: Superpowers Agentic Workflow (15 Skill)](#paket-11-superpowers-agentic-workflow-15-skill)
+   - [Paket 12: Chrome DevTools & Browser Automation (7 Skill)](#paket-12-chrome-devtools--browser-automation-7-skill)
 4. [Cara Kerja & Panduan Penggunaan Skill](#-cara-kerja--panduan-penggunaan-skill)
 
 ---
@@ -61,6 +64,17 @@ Seluruh skill dan plugin pada dokumen ini dipasang pada direktori konfigurasi gl
 3. Perintah secara transparan ditulis ulang menjadi `rtk <perintah>` melalui mutasi `overwrite.CommandLine`.
 4. Binary `rtk.exe` mengeksekusi perintah asli di latar belakang dan memangkas keluaran teks yang redundan (seperti progres bar, baris kosong berulang, atau daftar tes sukses yang panjang) hingga **60% - 90%**, menghemat kuota konteks token model secara signifikan.
 5. Aturan kesadaran pada `rules/AGENTS.md` memberi tahu agen bahwa teks terminal yang diterimanya adalah hasil kompresi yang padat dan akurat.
+
+### 2. Superpowers Plugin (Agentic Workflow Methodology)
+- **Lokasi Direktori**: `~/.gemini/config/plugins/superpowers/` (atau `%USERPROFILE%\.gemini\config\plugins\superpowers\`)
+- **File Konfigurasi**: `plugin.json` (versi 7.0.1 oleh Jesse Vincent)
+- **Status Operasional**: ✅ **Aktif Otomatis**
+
+#### Mekanisme Kerja:
+1. Menyediakan bundel 15 skill alur kerja tingkat lanjut yang memandu agen untuk mempraktikkan metodologi rekayasa perangkat lunak modern.
+2. Memprioritaskan brainstorming dan spesifikasi sebelum menulis kode (`brainstorming`, `writing-plans`).
+3. Menjalankan TDD ketat (`test-driven-development`) dan delegasi sub-agen mandiri (`subagent-driven-development`, `dispatching-parallel-agents`).
+4. Mewajibkan verifikasi empiris berbasis perintah terminal (`verification-before-completion`) sebelum mengklaim pekerjaan selesai.
 
 ---
 
@@ -290,6 +304,46 @@ Integrasi ekosistem orkestrasi agen eksternal dan delegasi tugas otonom.
 
 ---
 
+### Paket 11: Superpowers Agentic Workflow (15 Skill)
+
+Metodologi rekayasa perangkat lunak agentik komprehensif oleh Jesse Vincent (`obra/superpowers`). Mengarahkan agen untuk bekerja dengan disiplin rekayasa tingkat tinggi: brainstorming terstruktur sebelum coding, perencanaan implementasi bertahap (*spec-driven*), TDD ketat, isolasi git worktrees, eksekusi sub-agen paralel, tinjauan kode adversarial, dan verifikasi bukti sebelum menyelesaikan tugas.
+
+| No | Nama Skill | Deskripsi & Kapan Digunakan |
+| :---: | :--- | :--- |
+| 1 | `brainstorming` | Wajib digunakan sebelum pekerjaan kreatif apa pun — merancang fitur, membuat komponen, menambah fungsi, memodifikasi perilaku, atau merencanakan sistem baru. |
+| 2 | `diagnosing-superpowers` | Mendiagnosis kendala atau kegagalan pada sesi superpowers (kerja berulang, rencana diabaikan, skill tidak aktif, overhead token, atau analisis performa sesi). |
+| 3 | `dispatching-parallel-agents` | Mendelegasikan 2 atau lebih tugas independen ke sub-agen paralel tanpa shared state atau dependensi sekuensial. |
+| 4 | `executing-plans` | Menjalankan rencana implementasi secara terstruktur langkah demi langkah dalam sesi aktif saat ini sebagai pelaksana utama. |
+| 5 | `finishing-a-development-branch` | Panduan integrasi cabang pengembangan setelah implementasi selesai dan seluruh pengujian lolos (merge, rebase, PR). |
+| 6 | `receiving-code-review` | Menanggapi masukan review kode secara kritis dan terverifikasi secara teknis sebelum menerapkan saran, bukan sekadar persetujuan buta. |
+| 7 | `requesting-code-review` | Mengajukan permohonan tinjauan kode setelah menyelesaikan tugas besar atau sebelum merge untuk memastikan kesesuaian dengan spesifikasi. |
+| 8 | `subagent-driven-development` | Pola eksekusi implementasi modular dengan mendelegasikan tugas-tugas mandiri ke sub-agen khusus. |
+| 9 | `systematic-debugging` | Investigasi sistematis untuk menemukan akar masalah (*root cause*) sebelum mengajukan perbaikan saat terjadi bug atau kegagalan tes. |
+| 10 | `test-driven-development` | Menggerakkan pengembangan dengan siklus Red-Green-Refactor yang ketat sebelum menulis kode implementasi. *(Shared dengan Paket 4)* |
+| 11 | `using-git-worktrees` | Menyiapkan isolasi workspace menggunakan git worktree sebelum mengeksekusi rencana atau fitur berisiko. |
+| 12 | `using-superpowers` | Menetapkan protokol penemuan dan aktivasi skill superpowers di awal percakapan sebelum memberikan respon. |
+| 13 | `verification-before-completion` | Mengharuskan verifikasi bukti empiris (*evidence*) melalui perintah terminal sebelum mengklaim pekerjaan selesai atau passing. |
+| 14 | `writing-plans` | Menyusun rencana implementasi detail berbasis spesifikasi sebelum menyentuh atau memodifikasi kode. |
+| 15 | `writing-skills` | Merancang, menulis, memvalidasi sintaks frontmatter, dan menguji coba skill agen baru sebelum didistribusikan. |
+
+---
+
+### Paket 12: Chrome DevTools & Browser Automation (7 Skill)
+
+Perkakas resmi dari tim Chrome DevTools (`ChromeDevTools/chrome-devtools-mcp`) untuk inspeksi browser mendalam, otomatisasi pengujian antarmuka, profil performa Core Web Vitals, audit aksesibilitas, dan diagnosis memori runtime melalui protokol Chrome DevTools MCP.
+
+| No | Nama Skill | Deskripsi & Kapan Digunakan |
+| :---: | :--- | :--- |
+| 1 | `a11y-debugging` | Audit dan debugging aksesibilitas (a11y) sesuai standar WCAG & web.dev: pengujian HTML semantik, ARIA label, fokus keyboard, target sentuh, dan kontras warna. |
+| 2 | `chrome-devtools` | Penggunaan Chrome DevTools via MCP untuk otomasi browser, evaluasi DOM, inspeksi jaringan, dan interaksi halaman web secara cerdas. |
+| 3 | `chrome-devtools-cli` | Panduan menulis skrip shell dan otomasi CLI untuk berinteraksi langsung dengan Chrome DevTools. |
+| 4 | `cookie-debugging` | Inspeksi, debugging, dan pengujian cookies, status sesi, otentikasi (401/403), SameSite, Partitioned cookies, dan kepatuhan banner persetujuan privasi. |
+| 5 | `debug-optimize-lcp` | Diagnosis dan optimasi Largest Contentful Paint (LCP) dan Core Web Vitals untuk mempercepat rendering hero image dan konten utama halaman web. |
+| 6 | `memory-leak-debugging` | Diagnosis dan perbaikan kebocoran memori (*memory leaks*) aplikasi JavaScript/Node.js melalui inspeksi dan perbandingan heap snapshot. |
+| 7 | `troubleshooting` | Panduan penanganan kendala koneksi tab browser, inisialisasi server MCP, dan troubleshooting target DevTools. |
+
+---
+
 ## 💡 Cara Kerja & Panduan Penggunaan Skill
 
 ### 1. Pemanggilan Otomatis oleh Model (*Model-Invoked*)
@@ -306,4 +360,4 @@ Anda juga dapat secara langsung menyebutkan nama skill dalam pesan Anda:
 - *Contoh*: `"Gunakan skill security-audit untuk menguji kerentanan API."`
 
 ---
-*Dokumen ini diperbarui secara berkala dan memetakan seluruh 134 skill terpasang di Google Antigravity.*
+*Dokumen ini diperbarui secara berkala dan memetakan seluruh 155 skill terpasang di Google Antigravity.*
