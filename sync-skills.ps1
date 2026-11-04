@@ -788,8 +788,12 @@ function Sync-Skill {
 
         # 1. Clone upstream (shallow)
         Write-Info "Cloning upstream..."
+        $prevEAP = $ErrorActionPreference
+        $ErrorActionPreference = "Continue"
         $cloneOut = & git -c credential.helper= clone --depth 1 --quiet $upstreamAuth $tempCloneDir 2>&1
-        if ($LASTEXITCODE -ne 0) {
+        $cloneExit = $LASTEXITCODE
+        $ErrorActionPreference = $prevEAP
+        if ($cloneExit -ne 0) {
             Write-Fail "Clone failed: $cloneOut"
             return "failed"
         }
@@ -865,18 +869,43 @@ function Sync-Skill {
     # 3. Push to backup repo
     Write-Info "Pushing to backup repo..."
     $tempBackupDir = Join-Path $TEMP_DIR "${Name}-backup"
+    if (Test-Path $tempBackupDir) { Remove-Item $tempBackupDir -Recurse -Force }
     New-Item -ItemType Directory -Path $tempBackupDir -Force | Out-Null
 
     $backupAuth = Get-AuthenticatedUrl $Config.backup_repo
-    $cloneBackup = & git clone --depth 1 --quiet --branch $Config.backup_branch $backupAuth $tempBackupDir 2>&1
-    if ($LASTEXITCODE -ne 0) {
+    $prevEAP = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    $cloneBackup = & git -c credential.helper= clone --depth 1 --quiet --branch $Config.backup_branch $backupAuth $tempBackupDir 2>&1
+    $cloneExit = $LASTEXITCODE
+    $ErrorActionPreference = $prevEAP
+
+    if ($cloneExit -ne 0) {
         # Branch may not exist: clone default then create
-        $cloneBackup2 = & git clone --depth 1 --quiet $backupAuth $tempBackupDir 2>&1
-        if ($LASTEXITCODE -ne 0) {
+        Write-Info "Branch '$($Config.backup_branch)' belum ada di backup repo. Mengkloning default branch..."
+        if (Test-Path $tempBackupDir) { Remove-Item $tempBackupDir -Recurse -Force }
+        New-Item -ItemType Directory -Path $tempBackupDir -Force | Out-Null
+
+        $prevEAP = $ErrorActionPreference
+        $ErrorActionPreference = "Continue"
+        $cloneBackup2 = & git -c credential.helper= clone --depth 1 --quiet $backupAuth $tempBackupDir 2>&1
+        $cloneExit2 = $LASTEXITCODE
+        $ErrorActionPreference = $prevEAP
+
+        if ($cloneExit2 -ne 0) {
             Write-Fail "Clone backup failed: $cloneBackup2"
             return "failed"
         }
-        Invoke-Git $tempBackupDir @("checkout", "-b", $Config.backup_branch) | Out-Null
+
+        # Pastikan checkout ke branch yang diinginkan
+        $currentBranch = (& git -C $tempBackupDir rev-parse --abbrev-ref HEAD 2>$null)
+        if ($currentBranch -ne $Config.backup_branch) {
+            $branchExists = (& git -C $tempBackupDir branch --list $Config.backup_branch 2>$null)
+            if ($branchExists) {
+                Invoke-Git $tempBackupDir @("checkout", $Config.backup_branch) | Out-Null
+            } else {
+                Invoke-Git $tempBackupDir @("checkout", "-b", $Config.backup_branch) | Out-Null
+            }
+        }
     }
 
     # Setup identity for commit
@@ -919,7 +948,7 @@ function Sync-Skill {
         $ts  = Get-Date -Format "yyyy-MM-dd HH:mm"
         $msg = "sync: update $Name from upstream ($ts)"
         Invoke-Git $tempBackupDir @("commit", "-m", $msg) | Out-Null
-        Invoke-Git $tempBackupDir @("push", "origin", $Config.backup_branch) | Out-Null
+        Invoke-Git $tempBackupDir @("push", "-u", "origin", $Config.backup_branch) | Out-Null
         Write-Ok "Pushed -> $($Config.backup_repo) [$($Config.backup_branch)]"
     } else {
         Write-Info "Backup repo already up to date."
