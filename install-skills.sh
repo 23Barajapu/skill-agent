@@ -42,30 +42,59 @@ echo -e "Target Instalasi    : ${TARGET_DIR}\n"
 mkdir -p "${TARGET_DIR}"
 mkdir -p "${PLUGINS_DIR}"
 
-# Daftar repositori remote
+# Daftar repositori remote (Format: name|primary_url|upstream_url|skill_path)
 declare -a REPOS=(
-    "agent-skills|https://github.com/agent-bara/agent-skill-bara.git|skills"
-    "anti-slop|https://github.com/agent-bara/antislop-bara.git|skills"
-    "apple-design|https://github.com/agent-bara/apple-design.git|skills"
-    "caveman|https://github.com/agent-bara/caveman-bara.git|skills"
-    "chrome-devtools-mcp|https://github.com/ChromeDevTools/chrome-devtools-mcp.git|skills"
-    "engineering-skills|https://github.com/agent-bara/engineering-skills-bara.git|skills"
-    "ponytail-bara|https://github.com/agent-bara/ponytail-bara.git|skills"
-    "rea|https://github.com/agent-bara/rea-bara.git|.agents/skills"
-    "rtk|https://github.com/agent-bara/rtk-bara.git|skills"
-    "security-audit-skill|https://github.com/agent-bara/security-audit-skill.git|skills"
-    "superpowers|https://github.com/agent-bara/superpowers-bara.git|skills"
+    "agent-skills|https://github.com/agent-bara/agent-skill-bara.git|https://github.com/addyosmani/agent-skills.git|skills"
+    "anti-slop|https://github.com/agent-bara/antislop-bara.git|https://github.com/miqdadbadjuber/anti-slop.git|skills"
+    "apple-design|https://github.com/agent-bara/apple-design.git|https://github.com/emilkowalski/skills.git|skills"
+    "caveman|https://github.com/agent-bara/caveman-bara.git|https://github.com/JuliusBrussee/caveman.git|skills"
+    "chrome-devtools-mcp|https://github.com/ChromeDevTools/chrome-devtools-mcp.git|https://github.com/ChromeDevTools/chrome-devtools-mcp.git|skills"
+    "engineering-skills|https://github.com/agent-bara/engineering-skills-bara.git|https://github.com/mattpocock/skills.git|skills"
+    "ponytail-bara|https://github.com/agent-bara/ponytail-bara.git|https://github.com/DietrichGebert/ponytail.git|skills"
+    "rea|https://github.com/agent-bara/rea-bara.git|https://github.com/morluto/rea.git|.agents/skills"
+    "rtk|https://github.com/agent-bara/rtk-bara.git|https://github.com/rtk-ai/rtk.git|skills"
+    "security-audit-skill|https://github.com/agent-bara/security-audit-skill.git|https://github.com/cloudflare/security-audit-skill.git|skills"
+    "superpowers|https://github.com/agent-bara/superpowers-bara.git|https://github.com/obra/superpowers.git|skills"
 )
+
+# Helper function: Clone repositori dengan mekanisme Dual-Source Fallback
+clone_with_fallback() {
+    local name="$1"
+    local primary_url="$2"
+    local upstream_url="$3"
+    local dest="$4"
+
+    export GIT_TERMINAL_PROMPT=0
+
+    # 1. Coba clone dari repositori Primary (agent-bara)
+    echo -e "     \033[0;37m[Primary] Mencoba clone ${name} dari ${primary_url}...\033[0m"
+    if git clone --depth 1 --quiet "${primary_url}" "${dest}" 2>/dev/null; then
+        echo -e "     \033[1;32m[OK] Berhasil clone ${name} dari repositori utama.\033[0m"
+        return 0
+    fi
+
+    # 2. Jika Primary gagal dan ada upstream_url publik, coba fallback
+    if [[ -n "${upstream_url}" && "${upstream_url}" != "${primary_url}" ]]; then
+        echo -e "     \033[1;33m[Fallback] Primary repo privat/tidak dapat diakses. Beralih ke upstream: ${upstream_url}...\033[0m"
+        rm -rf "${dest}"
+        if git clone --depth 1 --quiet "${upstream_url}" "${dest}" 2>/dev/null; then
+            echo -e "     \033[1;32m[OK] Berhasil clone ${name} dari upstream publik!\033[0m"
+            return 0
+        fi
+    fi
+
+    echo -e "     \033[1;31m[XX] Gagal mengunduh ${name} baik dari repositori utama maupun upstream publik.\033[0m"
+    return 1
+}
 
 # 1. Opsi --clone: Clone repositori ke direktori kerja jika diminta
 if [[ ${CLONE_LOCAL} -eq 1 ]]; then
     echo -e "\033[1;36m[>>] Opsi --clone aktif: Mengkloning repositori ke direktori kerja lokal...\033[0m"
     for item in "${REPOS[@]}"; do
-        IFS='|' read -r name url path <<< "${item}"
+        IFS='|' read -r name primary_url upstream_url path <<< "${item}"
         dest="${SCRIPT_DIR}/${name}"
         if [[ ! -d "${dest}" ]]; then
-            echo -e "     Cloning ${name}..."
-            git clone --depth 1 --quiet "${url}" "${dest}" || echo "  [!!] Gagal clone ${name}"
+            clone_with_fallback "${name}" "${primary_url}" "${upstream_url}" "${dest}" || true
         else
             echo -e "     [--] ${name} sudah ada di direktori lokal."
         fi
@@ -76,7 +105,7 @@ fi
 # 2. Periksa apakah ada folder repositori lokal di direktori kerja
 LOCAL_SOURCES=()
 for item in "${REPOS[@]}"; do
-    IFS='|' read -r name url relpath <<< "${item}"
+    IFS='|' read -r name primary_url upstream_url relpath <<< "${item}"
     local_path="${SCRIPT_DIR}/${name}/${relpath}"
     if [[ -d "${local_path}" ]]; then
         LOCAL_SOURCES+=("${name}|${local_path}")
@@ -104,10 +133,10 @@ if [[ ${#LOCAL_SOURCES[@]} -eq 0 ]]; then
     echo -e "Mengunduh langsung dari GitHub ke folder sementara..."
     DOWNLOADED=0
     for item in "${REPOS[@]}"; do
-        IFS='|' read -r name url relpath <<< "${item}"
+        IFS='|' read -r name primary_url upstream_url relpath <<< "${item}"
         echo -e "\033[0;36m[>>] Mengunduh ${name}...\033[0m"
         clone_dest="${TEMP_DIR}/${name}"
-        if git clone --depth 1 --quiet "${url}" "${clone_dest}" 2>/dev/null; then
+        if clone_with_fallback "${name}" "${primary_url}" "${upstream_url}" "${clone_dest}"; then
             skill_base="${clone_dest}/${relpath}"
             if [[ -d "${skill_base}" ]]; then
                 while IFS= read -r -d '' skill_file; do

@@ -29,6 +29,9 @@
 - **Dual-Mode Installer (Offline & Auto-Download)**:
   - **Mode Cepat / Offline**: Jika folder repositori lokal sudah ada, installer langsung menyalinnya secara instan tanpa membutuhkan koneksi internet.
   - **Mode Auto-Download**: Jika folder lokal belum ada (misal di PC baru yang baru saja meng-clone repositori ini), installer secara otomatis mengunduh seluruh 155 skill dan plugin langsung dari GitHub ke Antigravity.
+- **Dual-Source Fallback (Private Org & Public Upstream)**:
+  - **Primary**: Mengutamakan repositori organisasi (`agent-bara/*-bara.git`) untuk mendapatkan konfigurasi dan kustomisasi terbaru.
+  - **Fallback**: Jika repositori organisasi bersifat **Private** dan lingkungan baru belum memiliki token/autentikasi GitHub, installer otomatis beralih mengunduh dari repositori *official upstream* publik resmi (`addyosmani`, `obra`, `mattpocock`, dll.) tanpa gangguan atau error.
 - **Dukungan Penuh 3 OS**: Skrip siap pakai untuk Windows (`.bat` / `.ps1`) serta macOS dan Linux (`.sh`).
 - **Progressive Disclosure**: Instruksi skill dimuat secara *on-demand* saat dibutuhkan oleh agen AI, menjaga kuota token percakapan tetap hemat.
 - **Validasi Frontmatter Otomatis**: Memastikan header `name:` dan `description:` pada setiap `SKILL.md` valid dan sesuai standar Google Antigravity.

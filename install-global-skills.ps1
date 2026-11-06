@@ -39,20 +39,60 @@ if (-not (Test-Path $TargetDir)) {
 $repoBase = Split-Path -Parent $MyInvocation.MyCommand.Path
 if (-not $repoBase) { $repoBase = "c:\laragon\www\agent" }
 
-# Daftar repositori remote untuk auto-download & clone fallback
+# Daftar repositori remote untuk auto-download & clone fallback (Dual-Source Fallback)
 $REMOTE_REPOS = @(
-    @{ Name = "agent-skills";         Url = "https://github.com/agent-bara/agent-skill-bara.git";        SkillPath = "skills" },
-    @{ Name = "anti-slop";            Url = "https://github.com/agent-bara/antislop-bara.git";           SkillPath = "skills" },
-    @{ Name = "apple-design";         Url = "https://github.com/agent-bara/apple-design.git";            SkillPath = "skills" },
-    @{ Name = "caveman";              Url = "https://github.com/agent-bara/caveman-bara.git";             SkillPath = "skills" },
-    @{ Name = "chrome-devtools-mcp";   Url = "https://github.com/ChromeDevTools/chrome-devtools-mcp.git"; SkillPath = "skills" },
-    @{ Name = "engineering-skills";   Url = "https://github.com/agent-bara/engineering-skills-bara.git"; SkillPath = "skills" },
-    @{ Name = "ponytail-bara";        Url = "https://github.com/agent-bara/ponytail-bara.git";           SkillPath = "skills" },
-    @{ Name = "rea";                  Url = "https://github.com/agent-bara/rea-bara.git";                 SkillPath = ".agents/skills" },
-    @{ Name = "rtk";                  Url = "https://github.com/agent-bara/rtk-bara.git";                 SkillPath = "skills" },
-    @{ Name = "security-audit-skill"; Url = "https://github.com/agent-bara/security-audit-skill.git";    SkillPath = "skills" },
-    @{ Name = "superpowers";          Url = "https://github.com/agent-bara/superpowers-bara.git";         SkillPath = "skills" }
+    @{ Name = "agent-skills";         Url = "https://github.com/agent-bara/agent-skill-bara.git";        UpstreamUrl = "https://github.com/addyosmani/agent-skills.git";        SkillPath = "skills" },
+    @{ Name = "anti-slop";            Url = "https://github.com/agent-bara/antislop-bara.git";           UpstreamUrl = "https://github.com/miqdadbadjuber/anti-slop.git";       SkillPath = "skills" },
+    @{ Name = "apple-design";         Url = "https://github.com/agent-bara/apple-design.git";            UpstreamUrl = "https://github.com/emilkowalski/skills.git";             SkillPath = "skills" },
+    @{ Name = "caveman";              Url = "https://github.com/agent-bara/caveman-bara.git";             UpstreamUrl = "https://github.com/JuliusBrussee/caveman.git";          SkillPath = "skills" },
+    @{ Name = "chrome-devtools-mcp";   Url = "https://github.com/ChromeDevTools/chrome-devtools-mcp.git"; UpstreamUrl = "https://github.com/ChromeDevTools/chrome-devtools-mcp.git"; SkillPath = "skills" },
+    @{ Name = "engineering-skills";   Url = "https://github.com/agent-bara/engineering-skills-bara.git"; UpstreamUrl = "https://github.com/mattpocock/skills.git";            SkillPath = "skills" },
+    @{ Name = "ponytail-bara";        Url = "https://github.com/agent-bara/ponytail-bara.git";           UpstreamUrl = "https://github.com/DietrichGebert/ponytail.git";        SkillPath = "skills" },
+    @{ Name = "rea";                  Url = "https://github.com/agent-bara/rea-bara.git";                 UpstreamUrl = "https://github.com/morluto/rea.git";                     SkillPath = ".agents/skills" },
+    @{ Name = "rtk";                  Url = "https://github.com/agent-bara/rtk-bara.git";                 UpstreamUrl = "https://github.com/rtk-ai/rtk.git";                     SkillPath = "skills" },
+    @{ Name = "security-audit-skill"; Url = "https://github.com/agent-bara/security-audit-skill.git";    UpstreamUrl = "https://github.com/cloudflare/security-audit-skill.git";SkillPath = "skills" },
+    @{ Name = "superpowers";          Url = "https://github.com/agent-bara/superpowers-bara.git";         UpstreamUrl = "https://github.com/obra/superpowers.git";               SkillPath = "skills" }
 )
+
+# Helper function: Clone repositori dengan mekanisme Dual-Source Fallback
+function Invoke-GitCloneWithFallback {
+    param(
+        [string]$Name,
+        [string]$PrimaryUrl,
+        [string]$FallbackUrl,
+        [string]$Destination
+    )
+
+    $env:GIT_TERMINAL_PROMPT = "0"
+    $prevEAP = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+
+    try {
+        # 1. Coba clone dari repositori Primary (agent-bara)
+        Write-Host "     [Primary] Mencoba clone $Name dari $PrimaryUrl..." -ForegroundColor Gray
+        & git -c credential.helper= clone --depth 1 --quiet $PrimaryUrl $Destination 2>&1 | Out-Null
+        if ($LASTEXITCODE -eq 0 -and (Test-Path $Destination)) {
+            Write-Host "     [OK] Berhasil mengunduh $Name dari repositori utama." -ForegroundColor Green
+            return $true
+        }
+
+        # 2. Jika Primary gagal dan ada FallbackUrl (upstream publik), coba fallback
+        if ($FallbackUrl -and ($FallbackUrl -ne $PrimaryUrl)) {
+            Write-Host "     [Fallback] Primary repo privat/tidak dapat diakses. Beralih ke upstream publik: $FallbackUrl..." -ForegroundColor Yellow
+            if (Test-Path $Destination) { Remove-Item -Path $Destination -Recurse -Force -ErrorAction SilentlyContinue }
+            & git -c credential.helper= clone --depth 1 --quiet $FallbackUrl $Destination 2>&1 | Out-Null
+            if ($LASTEXITCODE -eq 0 -and (Test-Path $Destination)) {
+                Write-Host "     [OK] Berhasil mengunduh $Name dari upstream publik!" -ForegroundColor Green
+                return $true
+            }
+        }
+
+        Write-Warning "Gagal mengunduh $Name baik dari repositori utama maupun upstream publik."
+        return $false
+    } finally {
+        $ErrorActionPreference = $prevEAP
+    }
+}
 
 # Fungsi untuk mendeteksi folder skill lokal di workspace
 function Get-LocalSources([string]$BaseDir) {
@@ -81,16 +121,9 @@ if ($CloneLocal) {
     foreach ($repo in $REMOTE_REPOS) {
         $destRepo = Join-Path $repoBase $repo.Name
         if (-not (Test-Path $destRepo)) {
-            Write-Host "     Cloning $($repo.Name) dari $($repo.Url)..." -ForegroundColor Gray
-            $prevEAP = $ErrorActionPreference
-            $ErrorActionPreference = "Continue"
-            & git clone --depth 1 --quiet $repo.Url $destRepo
-            $cloneExit = $LASTEXITCODE
-            $ErrorActionPreference = $prevEAP
-            if ($cloneExit -eq 0) {
+            $cloned = Invoke-GitCloneWithFallback -Name $repo.Name -PrimaryUrl $repo.Url -FallbackUrl $repo.UpstreamUrl -Destination $destRepo
+            if ($cloned) {
                 Write-Host "     [OK] $($repo.Name) berhasil di-clone ke workspace." -ForegroundColor Green
-            } else {
-                Write-Warning "Gagal mengkloning $($repo.Name)."
             }
         } else {
             Write-Host "     [--] $($repo.Name) sudah ada di workspace lokal." -ForegroundColor Gray
@@ -135,13 +168,9 @@ if ($sources.Count -eq 0) {
             foreach ($repo in $REMOTE_REPOS) {
                 Write-Host "[>>] Mengunduh $($repo.Name)..." -ForegroundColor Cyan
                 $cloneTarget = Join-Path $tempDir $repo.Name
-                $prevEAP = $ErrorActionPreference
-                $ErrorActionPreference = "Continue"
-                & git clone --depth 1 --quiet $repo.Url $cloneTarget 2>&1 | Out-Null
-                $cExit = $LASTEXITCODE
-                $ErrorActionPreference = $prevEAP
+                $cloned = Invoke-GitCloneWithFallback -Name $repo.Name -PrimaryUrl $repo.Url -FallbackUrl $repo.UpstreamUrl -Destination $cloneTarget
 
-                if ($cExit -eq 0) {
+                if ($cloned) {
                     $skillBase = Join-Path $cloneTarget $repo.SkillPath
                     if (Test-Path $skillBase) {
                         $sList = @(Get-ChildItem -Path $skillBase -Filter "SKILL.md" -Recurse -File)
@@ -154,8 +183,6 @@ if ($sources.Count -eq 0) {
                             $dlCount++
                         }
                     }
-                } else {
-                    Write-Warning "Gagal mengunduh $($repo.Name)"
                 }
             }
             Write-Host "`n=== Installation Summary ===" -ForegroundColor Magenta
