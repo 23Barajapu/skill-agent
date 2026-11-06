@@ -4,14 +4,25 @@
     Installs all local skills from agent repositories into Antigravity global configuration.
 
 .DESCRIPTION
-    Scans repositories in c:\laragon\www\agent and copies all skills into:
+    Scans repositories in workspace and copies all skills into:
     C:\Users\<User>\.gemini\config\skills\<skill_name>
 
-    Also validates and fixes YAML frontmatter (ensuring `name:` and `description:` exist).
+    If no local repositories exist in the workspace, it automatically downloads and installs
+    all skills directly from remote GitHub repositories (Auto-Download).
+
+.PARAMETER TargetDir
+    The global Antigravity skills directory (default: %USERPROFILE%\.gemini\config\skills).
+
+.PARAMETER Force
+    Overwrites existing skills even if already installed.
+
+.PARAMETER CloneLocal
+    Clones the remote repositories directly into the workspace folder so they are permanently available locally.
 #>
 param(
     [string]$TargetDir = "$env:USERPROFILE\.gemini\config\skills",
-    [switch]$Force
+    [switch]$Force,
+    [switch]$CloneLocal
 )
 
 Set-StrictMode -Version Latest
@@ -28,23 +39,136 @@ if (-not (Test-Path $TargetDir)) {
 $repoBase = Split-Path -Parent $MyInvocation.MyCommand.Path
 if (-not $repoBase) { $repoBase = "c:\laragon\www\agent" }
 
-# Auto-detect seluruh repository lokal yang memiliki folder skill
-$sources = @()
-Get-ChildItem -Path $repoBase -Directory | Where-Object { $_.Name -notmatch '^\.' -and $_.Name -ne 'mcp-bahasa-indonesia' -and $_.Name -ne 'skills' } | ForEach-Object {
-    $dir = $_
-    $candidates = @(
-        (Join-Path $dir.FullName "skills"),
-        (Join-Path $dir.FullName ".agents\skills"),
-        (Join-Path $dir.FullName ".claude\skills")
-    )
-    foreach ($c in $candidates) {
-        if (Test-Path $c) {
-            $sources += @{ Repo = $dir.Name; Path = $c }
-            break
+# Daftar repositori remote untuk auto-download & clone fallback
+$REMOTE_REPOS = @(
+    @{ Name = "agent-skills";         Url = "https://github.com/agent-bara/agent-skill-bara.git";        SkillPath = "skills" },
+    @{ Name = "anti-slop";            Url = "https://github.com/agent-bara/antislop-bara.git";           SkillPath = "skills" },
+    @{ Name = "apple-design";         Url = "https://github.com/agent-bara/apple-design.git";            SkillPath = "skills" },
+    @{ Name = "caveman";              Url = "https://github.com/agent-bara/caveman-bara.git";             SkillPath = "skills" },
+    @{ Name = "chrome-devtools-mcp";   Url = "https://github.com/ChromeDevTools/chrome-devtools-mcp.git"; SkillPath = "skills" },
+    @{ Name = "engineering-skills";   Url = "https://github.com/agent-bara/engineering-skills-bara.git"; SkillPath = "skills" },
+    @{ Name = "ponytail-bara";        Url = "https://github.com/agent-bara/ponytail-bara.git";           SkillPath = "skills" },
+    @{ Name = "rea";                  Url = "https://github.com/agent-bara/rea-bara.git";                 SkillPath = ".agents/skills" },
+    @{ Name = "rtk";                  Url = "https://github.com/agent-bara/rtk-bara.git";                 SkillPath = "skills" },
+    @{ Name = "security-audit-skill"; Url = "https://github.com/agent-bara/security-audit-skill.git";    SkillPath = "skills" },
+    @{ Name = "superpowers";          Url = "https://github.com/agent-bara/superpowers-bara.git";         SkillPath = "skills" }
+)
+
+# Fungsi untuk mendeteksi folder skill lokal di workspace
+function Get-LocalSources([string]$BaseDir) {
+    if (-not (Test-Path $BaseDir)) { return @() }
+    $dirs = @(Get-ChildItem -Path $BaseDir -Directory | Where-Object { $_.Name -notmatch '^\.' -and $_.Name -ne 'mcp-bahasa-indonesia' -and $_.Name -ne 'skills' })
+    $res = foreach ($dir in $dirs) {
+        $candidates = @(
+            (Join-Path $dir.FullName "skills"),
+            (Join-Path $dir.FullName ".agents\skills"),
+            (Join-Path $dir.FullName ".claude\skills")
+        )
+        foreach ($c in $candidates) {
+            if (Test-Path $c) {
+                [PSCustomObject]@{ Repo = $dir.Name; Path = $c }
+                break
+            }
+        }
+    }
+    if ($res) { return @($res) }
+    return @()
+}
+
+# 1. Jika parameter -CloneLocal aktif, clone repositori yang belum ada ke workspace
+if ($CloneLocal) {
+    Write-Host "[>>] Opsi -CloneLocal aktif: Memeriksa dan mengkloning repositori ke workspace lokal ($repoBase)..." -ForegroundColor Cyan
+    foreach ($repo in $REMOTE_REPOS) {
+        $destRepo = Join-Path $repoBase $repo.Name
+        if (-not (Test-Path $destRepo)) {
+            Write-Host "     Cloning $($repo.Name) dari $($repo.Url)..." -ForegroundColor Gray
+            $prevEAP = $ErrorActionPreference
+            $ErrorActionPreference = "Continue"
+            & git clone --depth 1 --quiet $repo.Url $destRepo
+            $cloneExit = $LASTEXITCODE
+            $ErrorActionPreference = $prevEAP
+            if ($cloneExit -eq 0) {
+                Write-Host "     [OK] $($repo.Name) berhasil di-clone ke workspace." -ForegroundColor Green
+            } else {
+                Write-Warning "Gagal mengkloning $($repo.Name)."
+            }
+        } else {
+            Write-Host "     [--] $($repo.Name) sudah ada di workspace lokal." -ForegroundColor Gray
+        }
+    }
+    Write-Host ""
+}
+
+# 2. Pindai folder repositori lokal
+$sources = @(Get-LocalSources -BaseDir $repoBase)
+
+# 3. FITUR AUTO-DOWNLOAD: Jika tidak ada folder lokal yang terdeteksi
+if ($sources.Count -eq 0) {
+    Write-Host "[!!] Tidak ada folder repositori skill lokal yang ditemukan di: $repoBase" -ForegroundColor Yellow
+    Write-Host "[>>] Mengaktifkan fitur Auto-Download skill dari GitHub ke Antigravity...`n" -ForegroundColor Cyan
+
+    $syncScript = Join-Path $repoBase "sync-skills.ps1"
+    if (Test-Path $syncScript) {
+        Write-Host "Menjalankan instalasi dan sinkronisasi otomatis via sync-skills.ps1 (mode download-only, no push)...`n" -ForegroundColor Gray
+        $syncArgs = @("-File", $syncScript, "-SkillFilter", "all", "-SkipPush", "-SkipOrgCheck")
+        if ($Force) { $syncArgs += "-Force" }
+
+        & powershell -NoProfile -ExecutionPolicy Bypass @syncArgs
+        $exitCode = $LASTEXITCODE
+
+        if ($exitCode -eq 0) {
+            Write-Host "`n=== Installation Summary ===" -ForegroundColor Magenta
+            Write-Host "Seluruh skill berhasil diunduh dan dipasang secara otomatis ke Antigravity!" -ForegroundColor Green
+            exit 0
+        } else {
+            Write-Host "`n[XX] Gagal mengunduh skill otomatis via sync-skills.ps1 (Kode error: $exitCode)." -ForegroundColor Red
+            exit $exitCode
+        }
+    } else {
+        # Fallback mandiri jika sync-skills.ps1 tidak ada
+        Write-Host "Mengunduh langsung dari repositori GitHub ke direktori sementara..." -ForegroundColor Gray
+        $tempDir = Join-Path $env:TEMP "skills-auto-dl-$(Get-Date -Format 'yyyyMMddHHmmss')"
+        New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+        $dlCount = 0
+
+        try {
+            foreach ($repo in $REMOTE_REPOS) {
+                Write-Host "[>>] Mengunduh $($repo.Name)..." -ForegroundColor Cyan
+                $cloneTarget = Join-Path $tempDir $repo.Name
+                $prevEAP = $ErrorActionPreference
+                $ErrorActionPreference = "Continue"
+                & git clone --depth 1 --quiet $repo.Url $cloneTarget 2>&1 | Out-Null
+                $cExit = $LASTEXITCODE
+                $ErrorActionPreference = $prevEAP
+
+                if ($cExit -eq 0) {
+                    $skillBase = Join-Path $cloneTarget $repo.SkillPath
+                    if (Test-Path $skillBase) {
+                        $sList = @(Get-ChildItem -Path $skillBase -Filter "SKILL.md" -Recurse -File)
+                        foreach ($sk in $sList) {
+                            $skDir = $sk.Directory
+                            $dPath = Join-Path $TargetDir $skDir.Name
+                            if ((Test-Path $dPath) -and -not $Force) { continue }
+                            if (Test-Path $dPath) { Remove-Item -Path $dPath -Recurse -Force }
+                            Copy-Item -Path $skDir.FullName -Destination $dPath -Recurse -Force
+                            $dlCount++
+                        }
+                    }
+                } else {
+                    Write-Warning "Gagal mengunduh $($repo.Name)"
+                }
+            }
+            Write-Host "`n=== Installation Summary ===" -ForegroundColor Magenta
+            Write-Host "New skills installed : $dlCount" -ForegroundColor Green
+            Write-Host "Seluruh skill berhasil diunduh dan dipasang ke Antigravity!" -ForegroundColor Green
+            exit 0
+        } finally {
+            Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
         }
     }
 }
 
+# 4. Instalasi dari folder repositori lokal yang ada
 $installed = 0
 $skipped = 0
 $errors = @()
@@ -99,6 +223,26 @@ foreach ($s in $sources) {
                 Error = $_.Exception.Message
             }
         }
+    }
+}
+
+# Salin folder plugin Antigravity jika ada
+$pluginsTarget = if ($env:USERPROFILE) { Join-Path $env:USERPROFILE ".gemini\config\plugins" } else { "C:\Users\Administrator\.gemini\config\plugins" }
+$rtkPlugin = Join-Path $repoBase "rtk\plugins\rtk"
+if (-not (Test-Path $rtkPlugin)) { $rtkPlugin = Join-Path $repoBase "rtk" }
+if (Test-Path (Join-Path $rtkPlugin "plugin.json")) {
+    $rtkDest = Join-Path $pluginsTarget "rtk"
+    if (-not (Test-Path $rtkDest) -or $Force) {
+        if (-not (Test-Path $pluginsTarget)) { New-Item -ItemType Directory -Path $pluginsTarget -Force | Out-Null }
+        Copy-Item -Path $rtkPlugin -Destination $rtkDest -Recurse -Force
+    }
+}
+$spPlugin = Join-Path $repoBase "superpowers"
+if (Test-Path (Join-Path $spPlugin "plugin.json")) {
+    $spDest = Join-Path $pluginsTarget "superpowers"
+    if (-not (Test-Path $spDest) -or $Force) {
+        if (-not (Test-Path $pluginsTarget)) { New-Item -ItemType Directory -Path $pluginsTarget -Force | Out-Null }
+        Copy-Item -Path $spPlugin -Destination $spDest -Recurse -Force
     }
 }
 

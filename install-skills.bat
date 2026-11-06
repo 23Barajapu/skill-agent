@@ -1,15 +1,19 @@
 @echo off
-setlocal
+setlocal EnableDelayedExpansion
 
 :: ── Antigravity Global Skill Installer Launcher ──────────────────────────
 :: Fungsi:
-::   Menjalankan installer otomatis untuk memindai seluruh folder repositori lokal
-::   (agent-skills, anti-slop, caveman, engineering-skills, ponytail-bara, rea, rtk, dll.)
-::   dan memasangnya ke direktori konfigurasi global Antigravity (%USERPROFILE%\.gemini\config\skills).
+::   Menjalankan installer otomatis untuk memasang skill ke Google Antigravity.
+::   - Jika folder repositori lokal ada: langsung menyalin secara offline & instan.
+::   - Jika folder repositori lokal belum ada: otomatis mengunduh seluruh skill
+::     dari GitHub ke direktori konfigurasi Antigravity (Auto-Download).
 ::
 :: Penggunaan:
-::   install-skills.bat          -> Pasang / update seluruh skill lokal ke Antigravity
-::   install-skills.bat -Force   -> Pasang ulang seluruh skill secara paksa
+::   install-skills.bat             -> Pasang / update seluruh skill (auto-download jika folder lokal belum ada)
+::   install-skills.bat -Force      -> Pasang ulang seluruh skill secara paksa
+::   install-skills.bat -CloneLocal -> Download & clone seluruh repo ke folder kerja ini lalu pasang
+::   install-skills.bat clone       -> Sama dengan -CloneLocal
+::   install-skills.bat force       -> Sama dengan -Force
 
 set "SCRIPT=%~dp0install-global-skills.ps1"
 
@@ -20,16 +24,21 @@ if not exist "%SCRIPT%" (
     exit /b 1
 )
 
+set "EXTRA_ARGS=%*"
+if /i "%~1"=="clone"      set "EXTRA_ARGS=-CloneLocal %~2 %~3 %~4"
+if /i "%~1"=="clonelocal" set "EXTRA_ARGS=-CloneLocal %~2 %~3 %~4"
+if /i "%~1"=="force"      set "EXTRA_ARGS=-Force %~2 %~3 %~4"
+
 echo ====================================================================
 echo       ANTIGRAVITY GLOBAL SKILL INSTALLER LAUNCHER
 echo ====================================================================
 echo Direktori Workspace: %~dp0
 echo Target Instalasi   : %%USERPROFILE%%\.gemini\config\skills
 echo.
-echo Menjalankan proses pemindaian dan instalasi skill...
+echo Menjalankan proses instalasi skill (auto-detect lokal ^& auto-download remote)...
 echo.
 
-powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT%" %*
+powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT%" %EXTRA_ARGS%
 set "EXIT_CODE=%ERRORLEVEL%"
 
 echo.
