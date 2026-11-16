@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     Installs all local skills from agent repositories into Antigravity global configuration.
@@ -55,7 +55,74 @@ $REMOTE_REPOS = @(
     @{ Name = "remotion";             Url = "https://github.com/agent-bara/remotion-bara.git";            UpstreamUrl = "https://github.com/remotion-dev/remotion.git";          SkillPath = ".agents/skills" }
 )
 
-# Helper function: Clone repositori dengan mekanisme Dual-Source Fallback
+# Fungsi bantuan animasi loading spinner terminal untuk perintah Git
+function Invoke-GitWithSpinner {
+    param(
+        [string]$Message,
+        [string]$WorkDir = "",
+        [string[]]$GitArgs = @()
+    )
+
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = "git"
+    $escapedArgs = $GitArgs | ForEach-Object {
+        if ($_ -match '[\s"]') { '"{0}"' -f ($_ -replace '"', '\"') } else { $_ }
+    }
+    $psi.Arguments = ($escapedArgs -join " ")
+    if ($WorkDir -and (Test-Path $WorkDir)) {
+        $psi.WorkingDirectory = (Resolve-Path $WorkDir).Path
+    }
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $psi.UseShellExecute = $false
+    $psi.CreateNoWindow = $true
+
+    $proc = New-Object System.Diagnostics.Process
+    $proc.StartInfo = $psi
+
+    $sw = [System.Diagnostics.Stopwatch]::StartNew()
+    try {
+        [void]$proc.Start()
+    } catch {
+        return [PSCustomObject]@{ ExitCode = 1; Output = $_.Exception.Message; Elapsed = [TimeSpan]::Zero }
+    }
+
+    $outTask = $proc.StandardOutput.ReadToEndAsync()
+    $errTask = $proc.StandardError.ReadToEndAsync()
+
+    $frames = @('⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏')
+    if ([Console]::OutputEncoding.CodePage -ne 65001) {
+        $frames = @('|', '/', '-', '\')
+    }
+
+    $i = 0
+    while (-not $proc.HasExited) {
+        $f = $frames[$i % $frames.Length]
+        $el = "{0:d2}:{1:d2}" -f [int]$sw.Elapsed.TotalMinutes, $sw.Elapsed.Seconds
+        $line = "       [$f] $Message ($el)..."
+        if ($line.Length -gt 78) { $line = $line.Substring(0, 78) }
+        Write-Host -NoNewline "`r$line"
+        Start-Sleep -Milliseconds 80
+        $i++
+    }
+
+    $proc.WaitForExit()
+    $exitCode = $proc.ExitCode
+    $stdout = $outTask.Result
+    $stderr = $errTask.Result
+    $sw.Stop()
+
+    Write-Host -NoNewline ("`r" + (" " * 79) + "`r")
+
+    $combined = ($stdout + "`n" + $stderr).Trim()
+    return [PSCustomObject]@{
+        ExitCode = $exitCode
+        Output   = $combined
+        Elapsed  = $sw.Elapsed
+    }
+}
+
+# Helper function: Clone repositori dengan mekanisme Dual-Source Fallback & Spinner
 function Invoke-GitCloneWithFallback {
     param(
         [string]$Name,
@@ -65,34 +132,27 @@ function Invoke-GitCloneWithFallback {
     )
 
     $env:GIT_TERMINAL_PROMPT = "0"
-    $prevEAP = $ErrorActionPreference
-    $ErrorActionPreference = "Continue"
 
-    try {
-        # 1. Coba clone dari repositori Primary (agent-bara)
-        Write-Host "     [Primary] Mencoba clone $Name dari $PrimaryUrl..." -ForegroundColor Gray
-        & git -c credential.helper= clone --depth 1 --quiet $PrimaryUrl $Destination 2>&1 | Out-Null
-        if ($LASTEXITCODE -eq 0 -and (Test-Path $Destination)) {
-            Write-Host "     [OK] Berhasil mengunduh $Name dari repositori utama." -ForegroundColor Green
+    # 1. Coba clone dari repositori Primary (agent-bara)
+    $resPri = Invoke-GitWithSpinner -Message "Mengunduh $Name dari repositori utama..." -GitArgs @("-c", "credential.helper=", "clone", "--depth", "1", "--quiet", $PrimaryUrl, $Destination)
+    if ($resPri.ExitCode -eq 0 -and (Test-Path $Destination)) {
+        Write-Host "     [OK] Berhasil mengunduh $Name dari repositori utama ($($resPri.Elapsed.TotalSeconds.ToString('0.0'))s)." -ForegroundColor Green
+        return $true
+    }
+
+    # 2. Jika Primary gagal dan ada FallbackUrl (upstream publik), coba fallback
+    if ($FallbackUrl -and ($FallbackUrl -ne $PrimaryUrl)) {
+        Write-Host "     [Fallback] Primary repo privat/tidak dapat diakses. Beralih ke upstream publik: $FallbackUrl..." -ForegroundColor Yellow
+        if (Test-Path $Destination) { Remove-Item -Path $Destination -Recurse -Force -ErrorAction SilentlyContinue }
+        $resFb = Invoke-GitWithSpinner -Message "Mengunduh $Name dari upstream publik..." -GitArgs @("-c", "credential.helper=", "clone", "--depth", "1", "--quiet", $FallbackUrl, $Destination)
+        if ($resFb.ExitCode -eq 0 -and (Test-Path $Destination)) {
+            Write-Host "     [OK] Berhasil mengunduh $Name dari upstream publik ($($resFb.Elapsed.TotalSeconds.ToString('0.0'))s)!" -ForegroundColor Green
             return $true
         }
-
-        # 2. Jika Primary gagal dan ada FallbackUrl (upstream publik), coba fallback
-        if ($FallbackUrl -and ($FallbackUrl -ne $PrimaryUrl)) {
-            Write-Host "     [Fallback] Primary repo privat/tidak dapat diakses. Beralih ke upstream publik: $FallbackUrl..." -ForegroundColor Yellow
-            if (Test-Path $Destination) { Remove-Item -Path $Destination -Recurse -Force -ErrorAction SilentlyContinue }
-            & git -c credential.helper= clone --depth 1 --quiet $FallbackUrl $Destination 2>&1 | Out-Null
-            if ($LASTEXITCODE -eq 0 -and (Test-Path $Destination)) {
-                Write-Host "     [OK] Berhasil mengunduh $Name dari upstream publik!" -ForegroundColor Green
-                return $true
-            }
-        }
-
-        Write-Warning "Gagal mengunduh $Name baik dari repositori utama maupun upstream publik."
-        return $false
-    } finally {
-        $ErrorActionPreference = $prevEAP
     }
+
+    Write-Warning "Gagal mengunduh $Name baik dari repositori utama maupun upstream publik."
+    return $false
 }
 
 # Fungsi untuk mendeteksi folder skill lokal di workspace

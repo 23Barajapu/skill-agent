@@ -236,8 +236,86 @@ function Write-Warn([string]$msg) { Write-Host "  [!!] $msg" -ForegroundColor Ye
 function Write-Fail([string]$msg) { Write-Host "  [XX] $msg" -ForegroundColor Red }
 function Write-Info([string]$msg) { Write-Host "       $msg" -ForegroundColor Gray }
 
+function Invoke-GitWithSpinner {
+    param(
+        [string]$Message,
+        [string]$WorkDir = "",
+        [string[]]$GitArgs = @()
+    )
+
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = "git"
+    $escapedArgs = $GitArgs | ForEach-Object {
+        if ($_ -match '[\s"]') { '"{0}"' -f ($_ -replace '"', '\"') } else { $_ }
+    }
+    $psi.Arguments = ($escapedArgs -join " ")
+    if ($WorkDir -and (Test-Path $WorkDir)) {
+        $psi.WorkingDirectory = (Resolve-Path $WorkDir).Path
+    }
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $psi.UseShellExecute = $false
+    $psi.CreateNoWindow = $true
+
+    $proc = New-Object System.Diagnostics.Process
+    $proc.StartInfo = $psi
+
+    $sw = [System.Diagnostics.Stopwatch]::StartNew()
+    try {
+        [void]$proc.Start()
+    } catch {
+        return [PSCustomObject]@{ ExitCode = 1; Output = $_.Exception.Message; Elapsed = [TimeSpan]::Zero }
+    }
+
+    $outTask = $proc.StandardOutput.ReadToEndAsync()
+    $errTask = $proc.StandardError.ReadToEndAsync()
+
+    $frames = @('⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏')
+    if ([Console]::OutputEncoding.CodePage -ne 65001) {
+        $frames = @('|', '/', '-', '\')
+    }
+
+    $i = 0
+    while (-not $proc.HasExited) {
+        $f = $frames[$i % $frames.Length]
+        $el = "{0:d2}:{1:d2}" -f [int]$sw.Elapsed.TotalMinutes, $sw.Elapsed.Seconds
+        $line = "       [$f] $Message ($el)..."
+        if ($line.Length -gt 78) { $line = $line.Substring(0, 78) }
+        Write-Host -NoNewline "`r$line"
+        Start-Sleep -Milliseconds 80
+        $i++
+    }
+
+    $proc.WaitForExit()
+    $exitCode = $proc.ExitCode
+    $stdout = $outTask.Result
+    $stderr = $errTask.Result
+    $sw.Stop()
+
+    Write-Host -NoNewline ("`r" + (" " * 79) + "`r")
+
+    $combined = ($stdout + "`n" + $stderr).Trim()
+    return [PSCustomObject]@{
+        ExitCode = $exitCode
+        Output   = $combined
+        Elapsed  = $sw.Elapsed
+    }
+}
+
 function Invoke-Git {
-    param([string]$WorkDir, [string[]]$GitArgs)
+    param(
+        [string]$WorkDir,
+        [string[]]$GitArgs,
+        [string]$SpinnerMessage = ""
+    )
+    if ($SpinnerMessage) {
+        $res = Invoke-GitWithSpinner -Message $SpinnerMessage -WorkDir $WorkDir -GitArgs $GitArgs
+        if ($res.ExitCode -ne 0) {
+            throw "git $($GitArgs -join ' ') failed (code $($res.ExitCode)): $($res.Output)"
+        }
+        return $res.Output
+    }
+
     $prevEAP = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
     try {
@@ -652,19 +730,21 @@ function Clone-SkillToLocal {
     try {
         foreach ($srcUrl in $sources) {
             $authUrl = Get-AuthenticatedUrl $srcUrl
-            Write-Info "  Mencoba clone dari: $srcUrl"
             $branchArg = if ($srcUrl -eq $Config.backup_repo -and $Config.backup_branch) { @("--branch", $Config.backup_branch) } else { @() }
-            $out = & git -c credential.helper= clone --depth 1 --quiet @branchArg $authUrl $tempCloneTarget 2>&1
-            if ($LASTEXITCODE -eq 0) {
+            $gitCloneArgs = @("-c", "credential.helper=", "clone", "--depth", "1", "--quiet") + $branchArg + @($authUrl, $tempCloneTarget)
+            $resClone = Invoke-GitWithSpinner -Message "Mengunduh $Name dari $srcUrl..." -GitArgs $gitCloneArgs
+
+            if ($resClone.ExitCode -eq 0) {
                 $cloned = $true
-                Write-Ok "Berhasil clone dari $srcUrl"
+                Write-Ok "Berhasil clone dari $srcUrl ($($resClone.Elapsed.TotalSeconds.ToString('0.0'))s)"
                 break
             } else {
                 if ($branchArg.Count -gt 0) {
-                    $out = & git -c credential.helper= clone --depth 1 --quiet $authUrl $tempCloneTarget 2>&1
-                    if ($LASTEXITCODE -eq 0) {
+                    $gitCloneDefArgs = @("-c", "credential.helper=", "clone", "--depth", "1", "--quiet", $authUrl, $tempCloneTarget)
+                    $resCloneDef = Invoke-GitWithSpinner -Message "Mengunduh default branch $Name dari $srcUrl..." -GitArgs $gitCloneDefArgs
+                    if ($resCloneDef.ExitCode -eq 0) {
                         $cloned = $true
-                        Write-Ok "Berhasil clone default branch dari $srcUrl"
+                        Write-Ok "Berhasil clone default branch dari $srcUrl ($($resCloneDef.Elapsed.TotalSeconds.ToString('0.0'))s)"
                         break
                     }
                 }
@@ -786,8 +866,8 @@ function Sync-Skill {
 
         # Cek apakah upstream SHA sama dengan catatan sinkronisasi terakhir
         try {
-            $lsOut = & git ls-remote $upstreamAuth HEAD 2>$null
-            if ($LASTEXITCODE -eq 0 -and $lsOut -match '^([0-9a-fA-F]{40})\s+') {
+            $resLs = Invoke-GitWithSpinner -Message "Memeriksa versi upstream $Name..." -GitArgs @("ls-remote", $upstreamAuth, "HEAD")
+            if ($resLs.ExitCode -eq 0 -and $resLs.Output -match '^([0-9a-fA-F]{40})\s+') {
                 $upstreamSha = $Matches[1]
             }
         } catch {}
@@ -805,16 +885,12 @@ function Sync-Skill {
         New-Item -ItemType Directory -Path $tempCloneDir -Force | Out-Null
 
         # 1. Clone upstream (shallow)
-        Write-Info "Cloning upstream..."
-        $prevEAP = $ErrorActionPreference
-        $ErrorActionPreference = "Continue"
-        $cloneOut = & git -c credential.helper= clone --depth 1 --quiet $upstreamAuth $tempCloneDir 2>&1
-        $cloneExit = $LASTEXITCODE
-        $ErrorActionPreference = $prevEAP
-        if ($cloneExit -ne 0) {
-            Write-Fail "Clone failed: $cloneOut"
+        $cloneRes = Invoke-GitWithSpinner -Message "Cloning upstream $Name..." -GitArgs @("-c", "credential.helper=", "clone", "--depth", "1", "--quiet", $upstreamAuth, $tempCloneDir)
+        if ($cloneRes.ExitCode -ne 0) {
+            Write-Fail "Clone upstream failed: $($cloneRes.Output)"
             return "failed"
         }
+        Write-Ok "Upstream $Name berhasil diunduh ($($cloneRes.Elapsed.TotalSeconds.ToString('0.0'))s)"
 
         # Dapatkan SHA dari clone jika ls-remote belum dapat
         if (-not $upstreamSha) {
@@ -885,32 +961,27 @@ function Sync-Skill {
     }
 
     # 3. Push to backup repo
-    Write-Info "Pushing to backup repo..."
+    Write-Info "Menghubungkan ke backup repo: $($Config.backup_repo)"
     $tempBackupDir = Join-Path $TEMP_DIR "${Name}-backup"
     if (Test-Path $tempBackupDir) { Remove-Item $tempBackupDir -Recurse -Force }
     New-Item -ItemType Directory -Path $tempBackupDir -Force | Out-Null
 
     $backupAuth = Get-AuthenticatedUrl $Config.backup_repo
-    $prevEAP = $ErrorActionPreference
-    $ErrorActionPreference = "Continue"
-    $cloneBackup = & git -c credential.helper= clone --depth 1 --quiet --branch $Config.backup_branch $backupAuth $tempBackupDir 2>&1
-    $cloneExit = $LASTEXITCODE
-    $ErrorActionPreference = $prevEAP
+    $cloneBackupArgs = @("-c", "credential.helper=", "clone", "--depth", "1", "--quiet", "--branch", $Config.backup_branch, $backupAuth, $tempBackupDir)
+    $resBackup = Invoke-GitWithSpinner -Message "Cloning backup branch '$($Config.backup_branch)'..." -GitArgs $cloneBackupArgs
 
-    if ($cloneExit -ne 0) {
+    if ($resBackup.ExitCode -ne 0) {
         # Branch may not exist: clone default then create
         Write-Info "Branch '$($Config.backup_branch)' belum ada di backup repo. Mengkloning default branch..."
         if (Test-Path $tempBackupDir) { Remove-Item $tempBackupDir -Recurse -Force }
         New-Item -ItemType Directory -Path $tempBackupDir -Force | Out-Null
 
-        $prevEAP = $ErrorActionPreference
-        $ErrorActionPreference = "Continue"
-        $cloneBackup2 = & git -c credential.helper= clone --depth 1 --quiet $backupAuth $tempBackupDir 2>&1
-        $cloneExit2 = $LASTEXITCODE
-        $ErrorActionPreference = $prevEAP
+        $cloneBackupDefArgs = @("-c", "credential.helper=", "clone", "--depth", "1", "--quiet", $backupAuth, $tempBackupDir)
+        $resBackupDef = Invoke-GitWithSpinner -Message "Mengkloning default branch backup repo..." -GitArgs $cloneBackupDefArgs
 
-        if ($cloneExit2 -ne 0) {
-            Write-Fail "Clone backup failed: $cloneBackup2"
+        if ($resBackupDef.ExitCode -ne 0) {
+            Write-Fail "Clone backup failed: $($resBackupDef.Output)"
+            Write-Warn "Perubahan lokal tetap tersimpan di Antigravity, namun push ke backup repo gagal."
             return "failed"
         }
 
@@ -966,8 +1037,14 @@ function Sync-Skill {
         $ts  = Get-Date -Format "yyyy-MM-dd HH:mm"
         $msg = "sync: update $Name from upstream ($ts)"
         Invoke-Git $tempBackupDir @("commit", "-m", $msg) | Out-Null
-        Invoke-Git $tempBackupDir @("push", "-u", "origin", $Config.backup_branch) | Out-Null
-        Write-Ok "Pushed -> $($Config.backup_repo) [$($Config.backup_branch)]"
+        
+        $resPush = Invoke-GitWithSpinner -Message "Pushing update ke remote GitHub [$($Config.backup_branch)]..." -WorkDir $tempBackupDir -GitArgs @("push", "-u", "origin", $Config.backup_branch)
+        if ($resPush.ExitCode -eq 0) {
+            Write-Ok "Pushed -> $($Config.backup_repo) [$($Config.backup_branch)] ($($resPush.Elapsed.TotalSeconds.ToString('0.0'))s)"
+        } else {
+            Write-Fail "Push failed: $($resPush.Output)"
+            return "failed"
+        }
     } else {
         Write-Info "Backup repo already up to date."
     }

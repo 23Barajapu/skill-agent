@@ -58,7 +58,36 @@ declare -a REPOS=(
     "remotion|https://github.com/agent-bara/remotion-bara.git|https://github.com/remotion-dev/remotion.git|.agents/skills"
 )
 
-# Helper function: Clone repositori dengan mekanisme Dual-Source Fallback
+# Helper function: Git clone dengan animasi spinner terminal
+run_git_clone_with_spinner() {
+    local msg="$1"
+    local url="$2"
+    local dest="$3"
+    local spin='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+    local i=0
+
+    git clone --depth 1 --quiet "${url}" "${dest}" 2>/dev/null &
+    local pid=$!
+    local start_time=$(date +%s)
+
+    while kill -0 "$pid" 2>/dev/null; do
+        local now=$(date +%s)
+        local elapsed=$(( now - start_time ))
+        local mins=$(( elapsed / 60 ))
+        local secs=$(( elapsed % 60 ))
+        local char="${spin:$((i % 10)):1}"
+        printf "\r       \033[0;36m[%s] %s (%02d:%02d)...\033[0m   " "$char" "$msg" "$mins" "$secs"
+        sleep 0.08
+        ((i++)) || true
+    done
+
+    wait "$pid"
+    local exit_code=$?
+    printf "\r%80s\r" ""
+    return $exit_code
+}
+
+# Helper function: Clone repositori dengan mekanisme Dual-Source Fallback & Spinner
 clone_with_fallback() {
     local name="$1"
     local primary_url="$2"
@@ -67,18 +96,17 @@ clone_with_fallback() {
 
     export GIT_TERMINAL_PROMPT=0
 
-    # 1. Coba clone dari repositori Primary (agent-bara)
-    echo -e "     \033[0;37m[Primary] Mencoba clone ${name} dari ${primary_url}...\033[0m"
-    if git clone --depth 1 --quiet "${primary_url}" "${dest}" 2>/dev/null; then
+    # 1. Coba clone dari repositori Primary (agent-bara) dengan spinner
+    if run_git_clone_with_spinner "Mengunduh ${name} dari repositori utama" "${primary_url}" "${dest}"; then
         echo -e "     \033[1;32m[OK] Berhasil clone ${name} dari repositori utama.\033[0m"
         return 0
     fi
 
-    # 2. Jika Primary gagal dan ada upstream_url publik, coba fallback
+    # 2. Jika Primary gagal dan ada upstream_url publik, coba fallback dengan spinner
     if [[ -n "${upstream_url}" && "${upstream_url}" != "${primary_url}" ]]; then
         echo -e "     \033[1;33m[Fallback] Primary repo privat/tidak dapat diakses. Beralih ke upstream: ${upstream_url}...\033[0m"
         rm -rf "${dest}"
-        if git clone --depth 1 --quiet "${upstream_url}" "${dest}" 2>/dev/null; then
+        if run_git_clone_with_spinner "Mengunduh ${name} dari upstream publik" "${upstream_url}" "${dest}"; then
             echo -e "     \033[1;32m[OK] Berhasil clone ${name} dari upstream publik!\033[0m"
             return 0
         fi
