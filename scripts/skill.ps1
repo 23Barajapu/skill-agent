@@ -1,4 +1,3 @@
-﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     Antigravity All-in-One Skill Manager (Windows PowerShell)
