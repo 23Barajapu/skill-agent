@@ -1,27 +1,5 @@
-﻿<#
-.SYNOPSIS
-    Antigravity All-in-One Skill Manager (Windows PowerShell)
-
-.DESCRIPTION
-    Manajer terpadu untuk memasang, mensinkronkan, dan mengaudit seluruh 220 skill
-    serta plugin ke Google Antigravity.
-    
-    Mode Penggunaan:
-      1. Web Installer (tanpa clone):
-         irm https://raw.githubusercontent.com/23Barajapu/skill-agent/main/scripts/skill.ps1 | iex
-      
-      2. Pemasangan Lokal / Force:
-         .\scripts\skill.ps1
-         .\scripts\skill.ps1 install -Force
-         .\scripts\skill.ps1 install -CloneLocal
-
-      3. Sinkronisasi Upstream & Backup:
-         .\scripts\skill.ps1 sync
-         .\scripts\skill.ps1 sync -SkillFilter "caveman,rtk" -DryRun
-
-      4. Audit & Pengecekan Repositori:
-         .\scripts\skill.ps1 check
-#>
+﻿# Antigravity All-in-One Skill Manager (Windows PowerShell)
+# Repositori resmi: https://github.com/23Barajapu/skill-agent
 
 function Invoke-AntigravitySkillManager {
     [CmdletBinding(DefaultParameterSetName = "Default")]
