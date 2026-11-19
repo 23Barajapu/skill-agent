@@ -1,6 +1,6 @@
 # 📚 Katalog Lengkap Skill & Plugin Antigravity
 
-> Dokumentasi resmi dan panduan referensi seluruh **154 Skill** dan **2 Plugin Antigravity** yang terpasang secara global di Google Antigravity (`~/.gemini/config/`).
+> Dokumentasi resmi dan panduan referensi seluruh **220 Skill** dan **2 Plugin Antigravity** yang terpasang secara global di Google Antigravity (`~/.gemini/config/`).
 
 ---
 
@@ -21,6 +21,7 @@
    - [Paket 9: Security Audit & Pen-Testing (1 Skill)](#paket-9-security-audit--pen-testing-1-skill)
    - [Paket 10: Superpowers Agentic Workflow (15 Skill)](#paket-10-superpowers-agentic-workflow-15-skill)
    - [Paket 11: Chrome DevTools & Browser Automation (7 Skill)](#paket-11-chrome-devtools--browser-automation-7-skill)
+   - [Paket 12: Remotion Video Engineering & Studio Automation (67 Skill)](#paket-12-remotion-video-engineering--studio-automation-67-skill)
 4. [Cara Kerja & Panduan Penggunaan Skill](#-cara-kerja--panduan-penggunaan-skill)
 
 ---
@@ -333,6 +334,82 @@ Perkakas resmi dari tim Chrome DevTools (`ChromeDevTools/chrome-devtools-mcp`) u
 
 ---
 
+### Paket 12: Remotion Video Engineering & Studio Automation (67 Skill)
+
+Koleksi skill spesialis pengembangan framework video programatik Remotion (`remotion-dev/remotion`): arsitektur video komponen React, optimasi timeline Studio, manajemen rendering WebCodecs/FFmpeg, infrastruktur media Cloudflare R2, dan otomasi alur kerja rilis monorepo.
+
+| No | Nama Skill | Deskripsi & Kapan Digunakan |
+| :---: | :--- | :--- |
+| 1 | `studio` | Menjalankan Remotion Studio dari `packages/example` untuk pengujian dan preview langsung. |
+| 2 | `studio-dev` | Pengembangan dan review fitur/antarmuka Remotion Studio dengan prinsip optimistic updates dan konsistensi desain. |
+| 3 | `studio-perf` | Optimasi performa render Studio dengan meminimalkan komponen reaktif per-frame dan memoizing stable boundaries. |
+| 4 | `studio-mode` | Memahami kapabilitas dan batasan mode Studio (interactive, detached, deployed, browser-based). |
+| 5 | `studio-loop` | Siklus perbaikan berkesinambungan Studio melalui reproduksi isu UX/performa riil dan pengujian langsung. |
+| 6 | `studio-css-reset` | Styling antarmuka Studio dalam container `.css-reset` tanpa bergantung pada inherited reset properties. |
+| 7 | `studio-config-option-lifecycle` | Klasifikasi dan manajemen siklus hidup opsi konfigurasi Studio (startup-fixed vs reloadable). |
+| 8 | `visual-mode` | Pengembangan dan debugging Visual Mode Studio, sequence identity, node paths, dan override IDs. |
+| 9 | `react-scan` | Menganalisis profil render React Studio untuk mendeteksi re-render yang tidak perlu dan slow commits. |
+| 10 | `remotion-new-markup` | Menulis dan merestrukturisasi markup Remotion yang dapat diedit dengan trek dan boundary timing terhubung. |
+| 11 | `interactivity-best-practices` | Praktik terbaik menulis animasi Remotion yang intuitif bagi agen dan dapat diedit di Visual Mode Studio. |
+| 12 | `player-example` | Menjalankan aplikasi contoh `@remotion/player` untuk memverifikasi fungsionalitas pemutar video. |
+| 13 | `convert` | Menjalankan aplikasi `@remotion/convert` lokal untuk inspeksi antarmuka konversi video. |
+| 14 | `product-recording` | Menyiapkan Studio untuk demo rekaman produk dengan Canvas Capture dan mengimpor ke `packages/brand`. |
+| 15 | `canvas-capture-extension` | Membangun ulang, memasang, dan memuat ekstensi unpacked Chrome Canvas Capture internal Remotion. |
+| 16 | `import-canvas-capture` | Mengimpor rekaman Canvas Capture ke proyek sebagai komposisi yang dapat diedit dengan keyframe kursor. |
+| 17 | `timeline-layout-reveal` | Menangkap tangkapan layar komparasi layout timeline 2x untuk video pengungkapan perubahan UI. |
+| 18 | `homepage-video-assets` | Merender dan mengganti video strip kreator berlatar transparan (WebM Chrome & MP4 Safari) di homepage. |
+| 19 | `experts` | Mengelola direktori pakar Remotion, kartu profil pakar, dan regenerasi animasi pakar homepage. |
+| 20 | `add-expert` | Menambahkan profil pakar baru ke halaman Remotion experts. |
+| 21 | `docs` | Menjalankan situs dokumentasi Docusaurus lokal Remotion untuk meninjau perubahan dokumen. |
+| 22 | `docs-demo` | Menambahkan komponen demo interaktif `<Demo>` ke halaman dokumentasi Remotion. |
+| 23 | `writing-docs` | Panduan penulisan dan penyuntingan halaman dokumentasi MDX di `packages/docs`. |
+| 24 | `writing-tests` | Panduan penulisan dan pembaruan unit/integrasi tes dalam monorepo Remotion. |
+| 25 | `web-renderer-test` | Menambahkan atau memperbarui pengujian web renderer Remotion. |
+| 26 | `video-report` | Menghasilkan laporan analitik komprehensif mengenai file video yang dirender. |
+| 27 | `add-bug` | Menambahkan entri bug Remotion baru ke `packages/bugs/api/[v].ts`. |
+| 28 | `add-cli-option` | Menambahkan opsi CLI atau opsi konfigurasi baru ke Remotion monorepo. |
+| 29 | `add-effect` | Menambahkan efek visual baru ke paket `@remotion/effects` beserta ekspor dan dokumentasinya. |
+| 30 | `add-new-package` | Melakukan *scaffolding* paket baru ke monorepo Remotion (build script, checklist, dan registrasi). |
+| 31 | `add-sfx` | Menambahkan efek suara (*sound effect*) baru ke `@remotion/sfx`. |
+| 32 | `add-webcodecs-bug` | Mencatat pelacakan bug WebCodecs browser ke halaman dokumentasi webcodecs-bugs. |
+| 33 | `scaffold-element` | Menyiapkan struktur Element Remotion baru untuk pengembangan di docs Remotion Studio. |
+| 34 | `skill-locations` | Panduan penempatan skill Remotion (`.agents/skills` internal vs `packages/skills` publik). |
+| 35 | `deprecate-api` | Panduan standar penulisan depresiasi API publik Remotion pada TypeScript dan dokumentasi. |
+| 36 | `nullable-new-params` | Menstandardisasi penambahan parameter/props opsional baru menjadi required nullable untuk stabilitas API. |
+| 37 | `no-pointer` | Menerapkan styling kontrol pointerless interaktif Studio (default cursor + hover brightening). |
+| 38 | `no-comments` | Memastikan kebersihan kode Studio dari komentar yang tidak diperlukan sebelum merge. |
+| 39 | `v5-breaking-changes` | Menerapkan atau mereviu breaking change Remotion v5 yang berdampingan dengan v4 di cabang utama. |
+| 40 | `version` | Memeriksa dan memastikan versi kerja Remotion yang sedang dikembangkan. |
+| 41 | `update-version` | Memperbarui referensi versi `AvailableFrom` ke patch berikutnya pada PR. |
+| 42 | `release` | Alur kerja otomatisasi rilis versi baru Remotion monorepo. |
+| 43 | `merge` | Menunggu PR menjadi mergeable, menangani konflik, memisahkan kegagalan asli dari flake, dan merge. |
+| 44 | `pr-ready` | Menyelesaikan kegagalan CI, konflik merge, atau perubahan cabang lokal agar PR siap di-review. |
+| 45 | `pr-name` | Meninjau atau memperbaiki format penamaan judul Pull Request Remotion. |
+| 46 | `checkout` | Melakukan checkout cabang/ref yang diminta dan menyiapkan workspace monorepo. |
+| 47 | `gh-stack` | Mengelola stacked PRs dan memecah pekerjaan multipart menjadi cabang-cabang yang mudah di-review. |
+| 48 | `issue` | Membuat, mengedit, atau menambahkan komentar pada GitHub issue Remotion. |
+| 49 | `issue-management` | Mengelola relasi GitHub Issues 2.0 (parent, sub-issues, blocked-by, blocking links). |
+| 50 | `find-unplanned-issues` | Mengaudit dan membersihkan hierarki masterplan GitHub Remotion dari issue yatim atau tertutup. |
+| 51 | `fix-dependabot` | Memperbaiki Dependabot PR dengan memperbarui seluruh instance dependensi monorepo dan bun install. |
+| 52 | `fix-root-cause` | Mengidentifikasi dan memperbaiki akar penyebab kegagalan tes monorepo secara definitif. |
+| 53 | `flake` | Melacak dan mendiagnosis kegagalan tes CI intermiten (*flakes*) pada Remotion. |
+| 54 | `formatting` | Menjalankan pemeriksaan format dan gaya kode Remotion hingga lolos secara menyeluruh. |
+| 55 | `update-from-upstream-main` | Menyelaraskan cabang fitur saat ini dengan cabang utama kanonikal (`main`) tanpa rewrite history. |
+| 56 | `update-stars` | Memperbarui jumlah bintang GitHub Remotion di homepage dan melakukan push ke main. |
+| 57 | `update-ffmpeg` | Memperbarui arsip FFmpeg monorepo, binding, dan biner komposit lintas 7 platform. |
+| 58 | `upgrade-mediabunny` | Memperbarui dependensi Mediabunny dan paket `@mediabunny` terkait di monorepo. |
+| 59 | `upgrade-caniuse` | Memperbarui paket `caniuse-lite` ke versi npm terbaru di monorepo Remotion. |
+| 60 | `upload-r2` | Mengunggah aset media besar monorepo ke Cloudflare R2 (`remotion.media`) dan mengganti aset lokal. |
+| 61 | `offload-r2` | Memindahkan aset media lokal ke bucket R2 dan mengalihkan referensi URL kode ke hosted URL. |
+| 62 | `upload-element-previews` | Mengunggah aset preview Element ke `remotion.media` dan memperbarui URL lokal. |
+| 63 | `update-chrome-binaries-test-region` | Mempublikasikan biner Chrome Lambda ke region uji `eu-central-1` sebelum rollout penuh. |
+| 64 | `update-codex-plugin` | Memperbarui direktori plugin Codex dan ChatGPT Remotion ke versi yang telah dirilis. |
+| 65 | `update-legal-pdfs` | Menghasilkan ulang salinan PDF Terms, Privacy Policy, DPA, dan DPIA dari halaman dokumentasi. |
+| 66 | `vercel` | Mengonfigurasi pemantauan deployment Vercel dan tautan preview PR secara otomatis. |
+| 67 | `web-renderer-test` | Menguji rendering berbasis web browser untuk komponen video canvas Remotion. |
+
+---
+
 ## 💡 Cara Kerja & Panduan Penggunaan Skill
 
 ### 1. Pemanggilan Otomatis oleh Model (*Model-Invoked*)
@@ -349,4 +426,4 @@ Anda juga dapat secara langsung menyebutkan nama skill dalam pesan Anda:
 - *Contoh*: `"Gunakan skill security-audit untuk menguji kerentanan API."`
 
 ---
-*Dokumen ini diperbarui secara berkala dan memetakan seluruh 154 skill terpasang di Google Antigravity.*
+*Dokumen ini diperbarui secara berkala dan memetakan seluruh 220 skill terpasang di Google Antigravity.*
