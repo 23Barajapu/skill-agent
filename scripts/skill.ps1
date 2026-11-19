@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Antigravity All-in-One Skill Manager (Windows PowerShell)
 
@@ -97,11 +97,10 @@ $REMOTE_REPOS = @(
     @{ Name = "rea";                  Url = "https://github.com/agent-bara/rea-bara.git";                 UpstreamUrl = "https://github.com/morluto/rea.git";                     SkillPath = ".agents/skills" },
     @{ Name = "rtk";                  Url = "https://github.com/agent-bara/rtk-bara.git";                 UpstreamUrl = "https://github.com/rtk-ai/rtk.git";                     SkillPath = "skills" },
     @{ Name = "security-audit-skill"; Url = "https://github.com/agent-bara/security-audit-skill.git";    UpstreamUrl = "https://github.com/cloudflare/security-audit-skill.git";SkillPath = "skills" },
-    @{ Name = "superpowers";          Url = "https://github.com/agent-bara/superpowers-bara.git";         UpstreamUrl = "https://github.com/obra/superpowers.git";               SkillPath = "skills" },
-    @{ Name = "remotion";             Url = "https://github.com/agent-bara/remotion-bara.git";            UpstreamUrl = "https://github.com/remotion-dev/remotion.git";          SkillPath = ".agents/skills" }
+    @{ Name = "superpowers";          Url = "https://github.com/agent-bara/superpowers-bara.git";         UpstreamUrl = "https://github.com/obra/superpowers.git";               SkillPath = "skills" }
 )
 
-# Pemetaan lengkap 220 Skill untuk Sinkronisasi & Backup
+# Pemetaan lengkap 154 Skill untuk Sinkronisasi & Backup
 $SKILL_MAP = @{
     caveman = @{
         upstream_repo        = "https://github.com/JuliusBrussee/caveman.git"
@@ -220,13 +219,6 @@ $SKILL_MAP = @{
                                   "cookie-debugging", "debug-optimize-lcp", "memory-leak-debugging",
                                   "troubleshooting")
         backup_repo          = "https://github.com/agent-bara/chrome-devtools-mcp-bara.git"
-        backup_branch        = "main"
-    }
-    'remotion' = @{
-        upstream_repo        = "https://github.com/remotion-dev/remotion.git"
-        upstream_skill_path  = ".agents/skills"
-        local_skill_prefixes = @("add-bug", "add-cli-option", "add-effect", "add-expert", "add-new-package", "add-sfx", "add-webcodecs-bug", "canvas-capture-extension", "checkout", "convert", "deprecate-api", "docs", "docs-demo", "experts", "find-unplanned-issues", "fix-dependabot", "fix-root-cause", "flake", "formatting", "gh-stack", "homepage-video-assets", "import-canvas-capture", "interactivity-best-practices", "issue", "issue-management", "merge", "no-comments", "no-pointer", "nullable-new-params", "offload-r2", "player-example", "pr", "pr-name", "pr-ready", "product-recording", "react-scan", "release", "remotion-new-markup", "scaffold-element", "skill-locations", "studio", "studio-config-option-lifecycle", "studio-css-reset", "studio-dev", "studio-loop", "studio-mode", "studio-perf", "timeline-layout-reveal", "update-chrome-binaries-test-region", "update-codex-plugin", "update-ffmpeg", "update-from-upstream-main", "update-legal-pdfs", "update-stars", "update-version", "upgrade-caniuse", "upgrade-mediabunny", "upload-element-previews", "upload-r2", "v5-breaking-changes", "vercel", "version", "video-report", "visual-mode", "web-renderer-test", "writing-docs", "writing-tests")
-        backup_repo          = "https://github.com/agent-bara/remotion-bara.git"
         backup_branch        = "main"
     }
 }

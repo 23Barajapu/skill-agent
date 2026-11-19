@@ -1,11 +1,11 @@
 # Skill Agent — Google Antigravity Skill & Plugin Suite
 
-> Repositori resmi installer, pengelola, dan sinkronisasi otomatis seluruh **220 Skill Unik** dan **2 Plugin Lifecycle** untuk **Google Antigravity** di lintas sistem operasi (**Windows, macOS, dan Linux**).
+> Repositori resmi installer, pengelola, dan sinkronisasi otomatis seluruh **154 Skill Unik** dan **2 Plugin Lifecycle** untuk **Google Antigravity** di lintas sistem operasi (**Windows, macOS, dan Linux**).
 
 [![OS: Windows](https://img.shields.io/badge/OS-Windows-0078D6?logo=windows&logoColor=white)](#1-windows-powershell)
 [![OS: macOS](https://img.shields.io/badge/OS-macOS-000000?logo=apple&logoColor=white)](#2-macos-terminal)
 [![OS: Linux](https://img.shields.io/badge/OS-Linux-FCC624?logo=linux&logoColor=black)](#3-linux-terminal)
-[![Skills: 220](https://img.shields.io/badge/Skills-220%20Installed-brightgreen)](#paket-skill-yang-tersedia-12-paket)
+[![Skills: 154](https://img.shields.io/badge/Skills-154%20Installed-brightgreen)](#paket-skill-yang-tersedia-11-paket)
 [![Plugins: 2](https://img.shields.io/badge/Plugins-RTK%20%26%20Superpowers-blue)](#plugin-antigravity)
 
 ---
@@ -29,7 +29,7 @@ curl -fsSL https://raw.githubusercontent.com/23Barajapu/skill-agent/main/scripts
 curl -fsSL https://raw.githubusercontent.com/23Barajapu/skill-agent/main/scripts/skill.sh | bash
 ```
 
-> **Catatan**: Installer otomatis mendeteksi konfigurasi global Antigravity (`~/.gemini/config/`), mengunduh seluruh 220 skill dan 2 plugin dengan mekanisme dual-source fallback (primary org dan upstream publik), serta memvalidasi frontmatter skill secara otomatis.
+> **Catatan**: Installer otomatis mendeteksi konfigurasi global Antigravity (`~/.gemini/config/`), mengunduh seluruh 154 skill dan 2 plugin dengan mekanisme dual-source fallback (primary org dan upstream publik), serta memvalidasi frontmatter skill secara otomatis.
 
 ---
 
@@ -39,7 +39,7 @@ curl -fsSL https://raw.githubusercontent.com/23Barajapu/skill-agent/main/scripts
 3. [Penggunaan Lokal (Bagi Pengelola / Maintainer)](#penggunaan-lokal-bagi-pengelola--maintainer)
 4. [Opsi dan Parameter CLI](#opsi-dan-parameter-cli)
 5. [Sinkronisasi Berkala (Sync)](#sinkronisasi-berkala-sync)
-6. [Paket Skill yang Tersedia (12 Paket)](#paket-skill-yang-tersedia-12-paket)
+6. [Paket Skill yang Tersedia (11 Paket)](#paket-skill-yang-tersedia-11-paket)
 7. [Plugin Antigravity](#plugin-antigravity)
 8. [Dokumentasi Lengkap](#dokumentasi-lengkap)
 
@@ -135,9 +135,9 @@ Repositori ini menyediakan gerbang otomatisasi resmi di cloud melalui GitHub Act
 
 ---
 
-## Paket Skill yang Tersedia (12 Paket)
+## Paket Skill yang Tersedia (11 Paket)
 
-Seluruh **220 Skill Unik** dikelompokkan ke dalam 12 paket kapabilitas:
+Seluruh **154 Skill Unik** dikelompokkan ke dalam 11 paket kapabilitas:
 
 | Paket | Nama Kategori | Jumlah | Cakupan Utama |
 | :---: | :--- | :---: | :--- |
@@ -152,8 +152,7 @@ Seluruh **220 Skill Unik** dikelompokkan ke dalam 12 paket kapabilitas:
 | **Paket 9** | **Security Audit & Pen-Testing** | 1 Skill | Audit keamanan mendalam, deteksi kerentanan OWASP, inspeksi API, dan pen-testing. |
 | **Paket 10** | **Superpowers Agentic Workflow** | 15 Skill | Metodologi rekayasa agen (brainstorming, spec-first, TDD ketat, git worktree, delegasi paralel). |
 | **Paket 11** | **Chrome DevTools & Browser Automation** | 7 Skill | Otomasi browser via MCP, audit aksesibilitas (a11y), profil LCP/Core Web Vitals, dan memory leak. |
-| **Paket 12** | **Remotion Video Engineering** | 67 Skill | Pembuatan video programatik React, optimasi timeline Studio, rendering FFmpeg, dan WebCodecs. |
-| **TOTAL** | | **220 Skill** | **12 Repositori Terkurasi** |
+| **TOTAL** | | **154 Skill** | **11 Repositori Terkurasi** |
 
 ---
 
