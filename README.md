@@ -166,6 +166,12 @@ Jika Anda ingin memperbarui skill dengan rilis upstream terbaru dari GitHub, jal
   pwsh -File sync-skills.ps1 -SkipPush -SkipOrgCheck
   ```
 
+### 🚪 Satu Gerbang Otomatisasi Cloud (GitHub Actions Single Gateway)
+Repositori ini menyediakan satu-satunya gerbang otomatisasi resmi di cloud melalui GitHub Actions (`.github/workflows/sync-skills.yml`):
+- **Otomatis Terjadwal**: Berjalan setiap hari Minggu pukul 00:00 UTC (07:00 WIB) untuk menarik update upstream.
+- **Manual (On-Demand)**: Dapat dipicu kapan saja melalui tab **Actions** $\rightarrow$ **Sync Skills Gateway** $\rightarrow$ **Run workflow**.
+- **Bebas Notifikasi CI Gagal**: Seluruh folder `.github/workflows` bawaan repositori upstream telah dibersihkan secara permanen dari repositori backup `agent-bara/*-bara`, mencegah kegagalan pipeline yang tidak perlu.
+
 ---
 
 ## 📦 Paket Skill yang Tersedia

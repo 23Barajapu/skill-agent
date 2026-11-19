@@ -1,0 +1,62 @@
+name: Sync Skills Gateway
+
+on:
+  schedule:
+    # Berjalan otomatis setiap hari Minggu pukul 00:00 UTC (07:00 WIB)
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+    inputs:
+      skill_filter:
+        description: 'Daftar skill yang disinkronkan (pisahkan koma, atau "all")'
+        required: true
+        default: 'all'
+        type: string
+      force:
+        description: 'Paksa sinkronisasi ulang meskipun SHA upstream sama'
+        required: false
+        default: false
+        type: boolean
+      dry_run:
+        description: 'Mode Dry-Run (simulasi tanpa mengubah berkas)'
+        required: false
+        default: false
+        type: boolean
+      skip_push:
+        description: 'Lewati proses push ke repositori backup'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  sync-skills:
+    name: Run Skill Sync Gateway
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          token: ${{ secrets.ORG_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Setup Git Identity
+        run: |
+          git config --global user.name "agent-bara"
+          git config --global user.email "agent-bara@users.noreply.github.com"
+          git config --global core.autocrlf false
+
+      - name: Execute Skill Synchronization Gateway
+        shell: powershell
+        env:
+          GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          $params = @("-SkillFilter", "${{ inputs.skill_filter || 'all' }}")
+          if ("${{ inputs.force }}" -eq "true") { $params += "-Force" }
+          if ("${{ inputs.dry_run }}" -eq "true") { $params += "-DryRun" }
+          if ("${{ inputs.skip_push }}" -eq "true") { $params += "-SkipPush" }
+          
+          Write-Host "Menjalankan Gerbang Sinkronisasi Skill Terpusat..." -ForegroundColor Cyan
+          .\sync-skills.ps1 @params

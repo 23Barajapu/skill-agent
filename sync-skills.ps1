@@ -1022,6 +1022,14 @@ function Sync-Skill {
         }
     }
 
+    # Bersihkan folder .github (workflows CI/CD bawaan upstream) dari backup repo
+    # agar tidak pernah memicu eksekusi GitHub Actions yang gagal di organisasi agent-bara
+    $backupGithubDir = Join-Path $tempBackupDir ".github"
+    if (Test-Path $backupGithubDir) {
+        Remove-Item $backupGithubDir -Recurse -Force -ErrorAction SilentlyContinue
+        try { & git -C $tempBackupDir rm -rf .github 2>&1 | Out-Null } catch {}
+    }
+
     # Commit and push
     Invoke-Git $tempBackupDir @("add", "-A") | Out-Null
     $status = Invoke-Git $tempBackupDir @("status", "--porcelain")
