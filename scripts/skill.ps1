@@ -24,24 +24,25 @@
          .\scripts\skill.ps1 check
 #>
 
-[CmdletBinding(DefaultParameterSetName = "Default")]
-param(
-    [Parameter(Position = 0)]
-    [ValidateSet("install", "sync", "check", "help", "")]
-    [string]$Action = "install",
+function Invoke-AntigravitySkillManager {
+    [CmdletBinding(DefaultParameterSetName = "Default")]
+    param(
+        [Parameter(Position = 0)]
+        [ValidateSet("install", "sync", "check", "help", "")]
+        [string]$Action = "install",
 
-    [string]$SkillFilter = "all",
-    [switch]$Install,
-    [switch]$Sync,
-    [switch]$Check,
-    [switch]$CheckOnly,
-    [switch]$Force,
-    [switch]$CloneLocal,
-    [switch]$DryRun,
-    [switch]$SkipPush,
-    [switch]$SkipOrgCheck,
-    [string]$TargetDir = ""
-)
+        [string]$SkillFilter = "all",
+        [switch]$Install,
+        [switch]$Sync,
+        [switch]$Check,
+        [switch]$CheckOnly,
+        [switch]$Force,
+        [switch]$CloneLocal,
+        [switch]$DryRun,
+        [switch]$SkipPush,
+        [switch]$SkipOrgCheck,
+        [string]$TargetDir = ""
+    )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
@@ -54,16 +55,17 @@ elseif ($Install)           { $Action = "install" }
 elseif (-not $Action)       { $Action = "install" }
 
 # Resolusi path direktori kerja & konfigurasi global Antigravity
-$CURRENT_SCRIPT_PATH = if ($PSCommandPath) {
-    $PSCommandPath
-} elseif ($MyInvocation.MyCommand.Path) {
-    $MyInvocation.MyCommand.Path
-} else {
-    Join-Path $env:TEMP "skill.ps1"
+$cmdPath = ""
+if ($PSCommandPath) {
+    $cmdPath = $PSCommandPath
+} elseif ($MyInvocation -and $MyInvocation.MyCommand -and ($MyInvocation.MyCommand.PSObject.Properties['Path'])) {
+    $cmdPath = $MyInvocation.MyCommand.Path
 }
 
-$WORKSPACE_DIR = if ($PSCommandPath -or $MyInvocation.MyCommand.Path) {
-    Split-Path -Parent (Split-Path -Parent $CURRENT_SCRIPT_PATH)
+$CURRENT_SCRIPT_PATH = if ($cmdPath) { $cmdPath } else { Join-Path $env:TEMP "skill.ps1" }
+
+$WORKSPACE_DIR = if ($cmdPath -and (Test-Path $cmdPath)) {
+    Split-Path -Parent (Split-Path -Parent (Resolve-Path $cmdPath).Path)
 } else {
     if (Test-Path "c:\laragon\www\agent") { "c:\laragon\www\agent" } else { (Get-Location).Path }
 }
@@ -594,10 +596,13 @@ function Run-Sync {
     Run-Install
 }
 
-# --- Router Aksi Utama ---
-switch ($Action.ToLower()) {
-    "sync"    { Run-Sync }
-    "check"   { Run-Check }
-    "help"    { Get-Help $MyInvocation.MyCommand.Path; exit 0 }
-    default   { Run-Install }
+    # --- Router Aksi Utama ---
+    switch ($Action.ToLower()) {
+        "sync"    { Run-Sync }
+        "check"   { Run-Check }
+        "help"    { Get-Help $MyInvocation.MyCommand.Path; return }
+        default   { Run-Install }
+    }
 }
+
+Invoke-AntigravitySkillManager @args
