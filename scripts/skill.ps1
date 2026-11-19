@@ -9,6 +9,11 @@ function Invoke-AntigravitySkillManager {
         [string]$Action = "install",
 
         [string]$SkillFilter = "all",
+        [string]$Target = "",
+        [string]$Package = "",
+        [switch]$NonInteractive,
+        [switch]$Yes,
+        [switch]$Y,
         [switch]$Install,
         [switch]$Sync,
         [switch]$Check,
@@ -24,6 +29,8 @@ function Invoke-AntigravitySkillManager {
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $env:GIT_TERMINAL_PROMPT = "0"
+
+if ($Yes -or $Y) { $NonInteractive = $true }
 
 # Normalisasi Action berdasarkan switch
 if ($Sync)                  { $Action = "sync" }
@@ -209,6 +216,173 @@ $SKILL_MAP = @{
     }
 }
 
+# ==============================================================================
+# MULTI-AGENT & PACKAGE DEFINITIONS
+# ==============================================================================
+$SKILL_PACKAGES = @(
+    @{ Id = 1;  Key = "anti-slop";            Name = "Anti-Slop";                  Count = 6;  Desc = "UI Bersih, Aksesibilitas, Anti-AI Writing";      Repos = @("anti-slop") },
+    @{ Id = 2;  Key = "caveman";              Name = "Caveman & Token Efficiency"; Count = 26; Desc = "Kompresi Konteks, Graphify, Hemat Token";       Repos = @("caveman") },
+    @{ Id = 3;  Key = "ponytail";             Name = "Ponytail";                   Count = 6;  Desc = "Koding Pragmatis, Minimalis, Anti-Bloat";        Repos = @("ponytail-bara", "ponytail") },
+    @{ Id = 4;  Key = "agent-skills";         Name = "Agent Core Engineering";     Count = 25; Desc = "API Design, TDD, OWASP, Debugging Sistematis";  Repos = @("agent-skills") },
+    @{ Id = 5;  Key = "engineering-skills";   Name = "Engineering & Productivity"; Count = 37; Desc = "Praktik Rekayasa Matt Pocock, TDD, Refactor";    Repos = @("engineering-skills") },
+    @{ Id = 6;  Key = "rtk";                  Name = "RTK Specialist";             Count = 13; Desc = "CLI Token Killer Proxy, Rust TDD";              Repos = @("rtk") },
+    @{ Id = 7;  Key = "rea";                  Name = "REA - Reverse Engineering";  Count = 5;  Desc = "Rekayasa Balik Biner, Native, & Web Runtime";    Repos = @("rea") },
+    @{ Id = 8;  Key = "apple-design";         Name = "Apple Design & Motion";      Count = 14; Desc = "Fisika Fluida, Animasi 60fps, Swift Modern";     Repos = @("apple-design") },
+    @{ Id = 9;  Key = "security-audit-skill"; Name = "Security Audit & Pen-Testing";Count = 1; Desc = "Audit Keamanan OWASP, Inspeksi API";            Repos = @("security-audit-skill") },
+    @{ Id = 10; Key = "superpowers";          Name = "Superpowers Workflow";       Count = 15; Desc = "Metodologi Agen, Spec-First, Sub-Agent Paralel"; Repos = @("superpowers") },
+    @{ Id = 11; Key = "chrome-devtools-mcp";   Name = "Chrome DevTools MCP";        Count = 7;  Desc = "Otomasi Browser, Core Web Vitals, Memory Leak";   Repos = @("chrome-devtools-mcp") },
+    @{ Id = 12; Key = "artemis";              Name = "ARTEMIS Mobile Testing";     Count = 1;  Desc = "Otomasi & Pengujian Android ADB Multimodal";     Repos = @("artemis") }
+)
+
+function Get-AvailableAgents {
+    $uHome = if ($env:USERPROFILE) { $env:USERPROFILE } else { $HOME }
+    $appData = if ($env:APPDATA) { $env:APPDATA } else { "" }
+
+    return @(
+        @{
+            Id        = 1
+            Key       = "antigravity"
+            Name      = "Google Antigravity"
+            Detected  = (Test-Path (Join-Path $uHome ".gemini"))
+            Home      = (Join-Path $uHome ".gemini")
+            SkillsDir = (Join-Path $uHome ".gemini\config\skills")
+            PluginsDir= (Join-Path $uHome ".gemini\config\plugins")
+            Type      = "native_skill"
+        },
+        @{
+            Id        = 2
+            Key       = "kiro"
+            Name      = "Kiro IDE"
+            Detected  = (Test-Path (Join-Path $uHome ".kiro")) -or [bool](Get-Command kiro -ErrorAction SilentlyContinue)
+            Home      = (Join-Path $uHome ".kiro")
+            SkillsDir = (Join-Path $uHome ".kiro\skills")
+            Type      = "native_skill"
+        },
+        @{
+            Id        = 3
+            Key       = "claude"
+            Name      = "Claude Code / Desktop"
+            Detected  = (Test-Path (Join-Path $uHome ".claude")) -or [bool](Get-Command claude -ErrorAction SilentlyContinue)
+            Home      = (Join-Path $uHome ".claude")
+            SkillsDir = (Join-Path $uHome ".claude\skills")
+            RulesDir  = (Join-Path $uHome ".claude/rules")
+            Type      = "claude"
+        },
+        @{
+            Id        = 4
+            Key       = "windsurf"
+            Name      = "Windsurf (Codeium)"
+            Detected  = (Test-Path (Join-Path $uHome ".codeium\windsurf")) -or [bool](Get-Command windsurf -ErrorAction SilentlyContinue)
+            Home      = (Join-Path $uHome ".codeium\windsurf")
+            RulesDir  = (Join-Path $uHome ".codeium/windsurf/rules")
+            Type      = "windsurf_rule"
+        },
+        @{
+            Id        = 5
+            Key       = "cursor"
+            Name      = "Cursor IDE"
+            Detected  = (Test-Path (Join-Path $uHome ".cursor")) -or [bool](Get-Command cursor -ErrorAction SilentlyContinue)
+            Home      = (Join-Path $uHome ".cursor")
+            RulesDir  = (Join-Path $uHome ".cursor/rules")
+            Type      = "cursor_mdc"
+        },
+        @{
+            Id        = 6
+            Key       = "vscode"
+            Name      = "VS Code / Cline"
+            Detected  = (Test-Path (Join-Path $uHome ".cline")) -or ($appData -and (Test-Path (Join-Path $appData "Code")))
+            Home      = (Join-Path $uHome ".cline")
+            RulesDir  = (Join-Path $uHome ".cline/rules")
+            Type      = "cline_rule"
+        }
+    )
+}
+
+function Copy-SkillToAgent {
+    param(
+        [hashtable]$Agent,
+        [System.IO.DirectoryInfo]$SkillDir,
+        [string]$SkillName,
+        [bool]$ForceOverwrite = $false
+    )
+
+    switch ($Agent.Type) {
+        "native_skill" {
+            if (-not (Test-Path $Agent.SkillsDir)) { New-Item -ItemType Directory -Path $Agent.SkillsDir -Force | Out-Null }
+            $dest = Join-Path $Agent.SkillsDir $SkillName
+            if ((Test-Path $dest) -and -not $ForceOverwrite) { return "skipped" }
+            if (Test-Path $dest) { Remove-Item -Path $dest -Recurse -Force }
+            Copy-Item -Path $SkillDir.FullName -Destination $dest -Recurse -Force
+
+            $destSkillMd = Join-Path $dest "SKILL.md"
+            if (Test-Path $destSkillMd) {
+                $content = Get-Content -Path $destSkillMd -Raw
+                if ($content -notmatch "(?m)^name:\s*") {
+                    if ($content -match "^(?:?
+)?---?
+") {
+                        $content = $content -replace "^(?:?
+)?---?
+", "---`nname: $SkillName`n"
+                    } else {
+                        $content = "---`nname: $SkillName`n---`n" + $content
+                    }
+                    Set-Content -Path $destSkillMd -Value $content -Encoding UTF8
+                }
+            }
+            return "installed"
+        }
+        "claude" {
+            if (-not (Test-Path $Agent.SkillsDir)) { New-Item -ItemType Directory -Path $Agent.SkillsDir -Force | Out-Null }
+            if (-not (Test-Path $Agent.RulesDir))  { New-Item -ItemType Directory -Path $Agent.RulesDir -Force | Out-Null }
+            
+            $destSkill = Join-Path $Agent.SkillsDir $SkillName
+            if (-not (Test-Path $destSkill) -or $ForceOverwrite) {
+                if (Test-Path $destSkill) { Remove-Item -Path $destSkill -Recurse -Force }
+                Copy-Item -Path $SkillDir.FullName -Destination $destSkill -Recurse -Force
+            }
+            
+            $srcSkillMd = Join-Path $SkillDir.FullName "SKILL.md"
+            if (Test-Path $srcSkillMd) {
+                $destRule = Join-Path $Agent.RulesDir "$SkillName.md"
+                Copy-Item -Path $srcSkillMd -Destination $destRule -Force
+            }
+            return "installed"
+        }
+        "cursor_mdc" {
+            if (-not (Test-Path $Agent.RulesDir)) { New-Item -ItemType Directory -Path $Agent.RulesDir -Force | Out-Null }
+            $srcSkillMd = Join-Path $SkillDir.FullName "SKILL.md"
+            if (Test-Path $srcSkillMd) {
+                $destMdc = Join-Path $Agent.RulesDir "$SkillName.mdc"
+                Copy-Item -Path $srcSkillMd -Destination $destMdc -Force
+                return "installed"
+            }
+            return "skipped"
+        }
+        "windsurf_rule" {
+            if (-not (Test-Path $Agent.RulesDir)) { New-Item -ItemType Directory -Path $Agent.RulesDir -Force | Out-Null }
+            $srcSkillMd = Join-Path $SkillDir.FullName "SKILL.md"
+            if (Test-Path $srcSkillMd) {
+                $destMd = Join-Path $Agent.RulesDir "$SkillName.md"
+                Copy-Item -Path $srcSkillMd -Destination $destMd -Force
+                return "installed"
+            }
+            return "skipped"
+        }
+        "cline_rule" {
+            if (-not (Test-Path $Agent.RulesDir)) { New-Item -ItemType Directory -Path $Agent.RulesDir -Force | Out-Null }
+            $srcSkillMd = Join-Path $SkillDir.FullName "SKILL.md"
+            if (Test-Path $srcSkillMd) {
+                $destMd = Join-Path $Agent.RulesDir "$SkillName.md"
+                Copy-Item -Path $srcSkillMd -Destination $destMd -Force
+                return "installed"
+            }
+            return "skipped"
+        }
+    }
+    return "skipped"
+}
+
 # --- Format & Logging Helpers ---
 function Write-Step([string]$msg) { Write-Host "`n[>>] $msg" -ForegroundColor Cyan }
 function Write-Ok([string]$msg)   { Write-Host "  [OK] $msg" -ForegroundColor Green }
@@ -331,19 +505,110 @@ function Get-LocalSources([string]$BaseDir) {
 }
 
 # ==============================================================================
-# MODE 1: INSTALL SKILLS (Default / irm one-liner)
+# MODE 1: INSTALL SKILLS (Multi-Agent & Package Selection)
 # ==============================================================================
 function Run-Install {
-    Write-Host "`n=== Antigravity Global Skill Installer (Windows) ===" -ForegroundColor Magenta
-    Write-Host "Target Skills : $LOCAL_SKILLS_DIR" -ForegroundColor Gray
-    Write-Host "Target Plugins: $LOCAL_PLUGINS_DIR`n" -ForegroundColor Gray
+    Write-Host "`n=== Universal AI Agent & Skill Suite Installer (Windows) ===" -ForegroundColor Magenta
 
-    if (-not (Test-Path $LOCAL_SKILLS_DIR))  { New-Item -ItemType Directory -Path $LOCAL_SKILLS_DIR -Force | Out-Null }
-    if (-not (Test-Path $LOCAL_PLUGINS_DIR)) { New-Item -ItemType Directory -Path $LOCAL_PLUGINS_DIR -Force | Out-Null }
+    $allAgents = @(Get-AvailableAgents)
+    $detectedAgents = @($allAgents | Where-Object { $_.Detected })
+    if ($detectedAgents.Count -eq 0) {
+        $detectedAgents = @($allAgents | Where-Object { $_.Key -eq "antigravity" })
+    }
+
+    # --- LANGKAH 1: DETEKSI & PEMILIHAN TARGET AGENT / IDE ---
+    $selectedAgents = @()
+    if ($Target -eq "all") {
+        $selectedAgents = $detectedAgents
+    } elseif ($Target) {
+        $targetTokens = @($Target -split "," | ForEach-Object { $_.Trim().ToLower() })
+        foreach ($tok in $targetTokens) {
+            $match = $allAgents | Where-Object { $_.Key -eq $tok -or $_.Id.ToString() -eq $tok }
+            if ($match) { $selectedAgents += $match }
+        }
+    } elseif (-not $NonInteractive) {
+        Write-Host "`n======================================================" -ForegroundColor Cyan
+        Write-Host " [1/2] DETEKSI TARGET AI AGENT / IDE DI KOMPUTER     " -ForegroundColor Cyan
+        Write-Host "======================================================" -ForegroundColor Cyan
+        foreach ($ag in $allAgents) {
+            $mark = if ($ag.Detected) { "[x]" } else { "[ ]" }
+            $color = if ($ag.Detected) { "Green" } else { "DarkGray" }
+            $status = if ($ag.Detected) { "(Terdeteksi: $($ag.Home))" } else { "(Tidak terpasang)" }
+            Write-Host "  $mark $($ag.Id). $($ag.Name.PadRight(23)) $status" -ForegroundColor $color
+        }
+        Write-Host "`n  [A] Pasang ke SEMUA yang terdeteksi (Default)" -ForegroundColor Yellow
+        Write-Host "Pilih target [A atau nomor, contoh: 1,2] (Tekan Enter untuk Default [A]): " -NoNewline -ForegroundColor Cyan
+        $tInput = ""
+        try { $tInput = Read-Host } catch { $tInput = "A" }
+        if ([string]::IsNullOrWhiteSpace($tInput)) { $tInput = "A" }
+
+        if ($tInput -match '^(?i)a$') {
+            $selectedAgents = $detectedAgents
+        } else {
+            $tokens = @($tInput -split "," | ForEach-Object { $_.Trim().ToLower() })
+            foreach ($tok in $tokens) {
+                $match = $allAgents | Where-Object { $_.Key -eq $tok -or $_.Id.ToString() -eq $tok }
+                if ($match) { $selectedAgents += $match }
+            }
+        }
+    } else {
+        $selectedAgents = $detectedAgents
+    }
+
+    if ($selectedAgents.Count -eq 0) { $selectedAgents = $detectedAgents }
+
+    # --- LANGKAH 2: PEMILIHAN PAKET SKILL ---
+    $selectedPackages = @()
+    if ($Package -eq "all") {
+        $selectedPackages = $SKILL_PACKAGES
+    } elseif ($Package) {
+        $pkgTokens = @($Package -split "," | ForEach-Object { $_.Trim().ToLower() })
+        foreach ($tok in $pkgTokens) {
+            $match = $SKILL_PACKAGES | Where-Object { $_.Key -eq $tok -or $_.Id.ToString() -eq $tok }
+            if ($match) { $selectedPackages += $match }
+        }
+    } elseif (-not $NonInteractive) {
+        Write-Host "`n======================================================" -ForegroundColor Cyan
+        Write-Host " [2/2] PEMILIHAN PAKET SKILL YANG INGIN DIPASANG     " -ForegroundColor Cyan
+        Write-Host "======================================================" -ForegroundColor Cyan
+        Write-Host "  [A] SEMUA 155 Skill (12 Paket Lengkap) [Default]`n  ----------------------------------------------------" -ForegroundColor Yellow
+        foreach ($pkg in $SKILL_PACKAGES) {
+            $num = $pkg.Id.ToString().PadLeft(2)
+            Write-Host "  [$num] $($pkg.Name.PadRight(28)) ($($pkg.Count) Skill - $($pkg.Desc))" -ForegroundColor Gray
+        }
+        Write-Host "`nPilih paket [A atau nomor, contoh: 1,8,12] (Tekan Enter untuk Default [A]): " -NoNewline -ForegroundColor Cyan
+        $pInput = ""
+        try { $pInput = Read-Host } catch { $pInput = "A" }
+        if ([string]::IsNullOrWhiteSpace($pInput)) { $pInput = "A" }
+
+        if ($pInput -match '^(?i)a$') {
+            $selectedPackages = $SKILL_PACKAGES
+        } else {
+            $tokens = @($pInput -split "," | ForEach-Object { $_.Trim().ToLower() })
+            foreach ($tok in $tokens) {
+                $match = $SKILL_PACKAGES | Where-Object { $_.Key -eq $tok -or $_.Id.ToString() -eq $tok }
+                if ($match) { $selectedPackages += $match }
+            }
+        }
+    } else {
+        $selectedPackages = $SKILL_PACKAGES
+    }
+
+    if ($selectedPackages.Count -eq 0) { $selectedPackages = $SKILL_PACKAGES }
+
+    # Himpun repositori yang diizinkan berdasarkan paket terpilih
+    $allowedRepos = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    foreach ($pkg in $selectedPackages) {
+        foreach ($r in $pkg.Repos) { [void]$allowedRepos.Add($r) }
+    }
+
+    Write-Step "Target Agen : $(($selectedAgents | ForEach-Object { $_.Name }) -join ', ')"
+    Write-Step "Paket Skill : $(($selectedPackages | ForEach-Object { $_.Name }) -join ', ')"
 
     if ($CloneLocal) {
         Write-Step "Opsi -CloneLocal aktif: Memeriksa dan mengkloning repositori ke workspace lokal..."
         foreach ($repo in $REMOTE_REPOS) {
+            if (-not $allowedRepos.Contains($repo.Name)) { continue }
             $destRepo = Join-Path $WORKSPACE_DIR $repo.Name
             if (-not (Test-Path $destRepo)) {
                 Invoke-GitCloneWithFallback -Name $repo.Name -PrimaryUrl $repo.Url -FallbackUrl $repo.UpstreamUrl -Destination $destRepo | Out-Null
@@ -363,6 +628,7 @@ function Run-Install {
 
         try {
             foreach ($repo in $REMOTE_REPOS) {
+                if (-not $allowedRepos.Contains($repo.Name)) { continue }
                 Write-Step "Mengunduh $($repo.Name)..."
                 $cloneTarget = Join-Path $tempDir $repo.Name
                 $cloned = Invoke-GitCloneWithFallback -Name $repo.Name -PrimaryUrl $repo.Url -FallbackUrl $repo.UpstreamUrl -Destination $cloneTarget
@@ -378,99 +644,76 @@ function Run-Install {
                         $sList = @(Get-ChildItem -Path $skillBase -Filter "SKILL.md" -Recurse -File)
                         foreach ($sk in $sList) {
                             $skDir = $sk.Directory
-                            $dPath = Join-Path $LOCAL_SKILLS_DIR $skDir.Name
-                            if ((Test-Path $dPath) -and -not $Force) { continue }
-                            if (Test-Path $dPath) { Remove-Item -Path $dPath -Recurse -Force }
-                            Copy-Item -Path $skDir.FullName -Destination $dPath -Recurse -Force
+                            foreach ($ag in $selectedAgents) {
+                                [void](Copy-SkillToAgent -Agent $ag -SkillDir $skDir -SkillName $skDir.Name -ForceOverwrite $Force)
+                            }
                             $dlCount++
                         }
                     }
                 }
             }
-            $totalUnique = @(Get-ChildItem -Path $LOCAL_SKILLS_DIR -Directory).Count
-            Write-Host "`n=== Installation Summary ===" -ForegroundColor Magenta
-            Write-Ok "Total skill unik terpasang di global : $totalUnique"
-            Write-Info "Total berkas skill diunduh           : $dlCount"
-            return
         } finally {
             Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
         }
-    }
+    } else {
+        # Pemasangan dari repositori lokal
+        $installed = 0
+        $skipped = 0
+        $errors = @()
 
-    # Pemasangan dari repositori lokal
-    $installed = 0
-    $skipped = 0
-    $errors = @()
+        foreach ($s in $sources) {
+            if (-not $allowedRepos.Contains($s.Repo) -and -not $allowedRepos.Contains(($s.Repo -replace '-bara$', ''))) { continue }
+            $skills = @(Get-ChildItem -Path $s.Path -Filter "SKILL.md" -Recurse -File)
+            Write-Step "Memproses $($s.Repo) ($($skills.Count) skills)..."
 
-    foreach ($s in $sources) {
-        $skills = @(Get-ChildItem -Path $s.Path -Filter "SKILL.md" -Recurse -File)
-        Write-Step "Memproses $($s.Repo) ($($skills.Count) skills)..."
+            foreach ($sk in $skills) {
+                $skillDir = $sk.Directory
+                $skillName = $skillDir.Name
 
-        foreach ($sk in $skills) {
-            $skillDir = $sk.Directory
-            $skillName = $skillDir.Name
-            $destPath = Join-Path $LOCAL_SKILLS_DIR $skillName
-
-            if ((Test-Path $destPath) -and -not $Force) {
-                if (Test-Path (Join-Path $destPath "SKILL.md")) {
-                    $skipped++
-                    continue
-                }
-            }
-
-            try {
-                if (Test-Path $destPath) { Remove-Item -Path $destPath -Recurse -Force }
-                Copy-Item -Path $skillDir.FullName -Destination $destPath -Recurse -Force
-
-                # Validasi & perbaikan frontmatter jika name: belum ada
-                $destSkillMd = Join-Path $destPath "SKILL.md"
-                if (Test-Path $destSkillMd) {
-                    $content = Get-Content -Path $destSkillMd -Raw
-                    if ($content -notmatch "(?m)^name:\s*") {
-                        if ($content -match "^(?:\r?\n)?---\r?\n") {
-                            $content = $content -replace "^(?:\r?\n)?---\r?\n", "---`nname: $skillName`n"
-                        } else {
-                            $content = "---`nname: $skillName`n---`n" + $content
-                        }
-                        Set-Content -Path $destSkillMd -Value $content -Encoding UTF8
+                foreach ($ag in $selectedAgents) {
+                    try {
+                        $res = Copy-SkillToAgent -Agent $ag -SkillDir $skillDir -SkillName $skillName -ForceOverwrite $Force
+                        if ($res -eq "installed") { $installed++ } else { $skipped++ }
+                    } catch {
+                        $errors += [PSCustomObject]@{ Skill = $skillName; Agent = $ag.Name; Error = $_.Exception.Message }
                     }
                 }
-                $installed++
-            } catch {
-                $errors += [PSCustomObject]@{ Skill = $skillName; Repo = $s.Repo; Error = $_.Exception.Message }
+            }
+        }
+
+        # Salin Plugin Antigravity (RTK & Superpowers) jika Antigravity dipilih
+        $hasAntigravity = [bool]($selectedAgents | Where-Object { $_.Key -eq "antigravity" })
+        if ($hasAntigravity) {
+            $rtkPlugin = Join-Path $WORKSPACE_DIR "rtk\plugins\rtk"
+            if (-not (Test-Path $rtkPlugin)) { $rtkPlugin = Join-Path $WORKSPACE_DIR "rtk" }
+            if (Test-Path (Join-Path $rtkPlugin "plugin.json")) {
+                $rtkDest = Join-Path $LOCAL_PLUGINS_DIR "rtk"
+                if (-not (Test-Path $rtkDest) -or $Force) {
+                    Copy-Item -Path $rtkPlugin -Destination $rtkDest -Recurse -Force
+                }
+            }
+
+            $spPlugin = Join-Path $WORKSPACE_DIR "superpowers"
+            if (Test-Path (Join-Path $spPlugin "plugin.json")) {
+                $spDest = Join-Path $LOCAL_PLUGINS_DIR "superpowers"
+                if (-not (Test-Path $spDest) -or $Force) {
+                    Copy-Item -Path $spPlugin -Destination $spDest -Recurse -Force
+                }
             }
         }
     }
 
-    # Salin Plugin Antigravity (RTK & Superpowers)
-    $rtkPlugin = Join-Path $WORKSPACE_DIR "rtk\plugins\rtk"
-    if (-not (Test-Path $rtkPlugin)) { $rtkPlugin = Join-Path $WORKSPACE_DIR "rtk" }
-    if (Test-Path (Join-Path $rtkPlugin "plugin.json")) {
-        $rtkDest = Join-Path $LOCAL_PLUGINS_DIR "rtk"
-        if (-not (Test-Path $rtkDest) -or $Force) {
-            Copy-Item -Path $rtkPlugin -Destination $rtkDest -Recurse -Force
-        }
-    }
-
-    $spPlugin = Join-Path $WORKSPACE_DIR "superpowers"
-    if (Test-Path (Join-Path $spPlugin "plugin.json")) {
-        $spDest = Join-Path $LOCAL_PLUGINS_DIR "superpowers"
-        if (-not (Test-Path $spDest) -or $Force) {
-            Copy-Item -Path $spPlugin -Destination $spDest -Recurse -Force
-        }
-    }
-
-    $totalUnique = @(Get-ChildItem -Path $LOCAL_SKILLS_DIR -Directory).Count
     Write-Host "`n=== Installation Summary ===" -ForegroundColor Magenta
-    Write-Ok "Total skill unik terpasang di global : $totalUnique"
-    Write-Ok "Skill baru terpasang / diperbarui    : $installed"
-    Write-Info "Berkas dilewati (sudah terpasang)    : $skipped"
-    if ($errors.Count -gt 0) {
-        Write-Fail "Terjadi $($errors.Count) kesalahan:"
-        $errors | Format-Table -AutoSize
-    } else {
-        Write-Ok "Seluruh skill Antigravity siap digunakan!"
+    Write-Ok "Pemasangan selesai ke $($selectedAgents.Count) Target AI Agent:"
+    foreach ($ag in $selectedAgents) {
+        $destPath = if ($ag.ContainsKey('SkillsDir')) { $ag['SkillsDir'] } else { $ag['RulesDir'] }
+        $count = 0
+        if (Test-Path $destPath) {
+            $count = @(Get-ChildItem -Path $destPath).Count
+        }
+        Write-Host "       - $($ag.Name.PadRight(22)) : $count skill/rule terpasang ($destPath)" -ForegroundColor Green
     }
+    Write-Ok "Seluruh skill siap digunakan di semua lingkungan kerja yang dipilih!"
 }
 
 # ==============================================================================

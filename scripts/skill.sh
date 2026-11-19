@@ -24,25 +24,47 @@ WORKSPACE_DIR="$(dirname "${SCRIPT_DIR}")"
 ACTION="install"
 FORCE=0
 CLONE_LOCAL=0
+TARGET_ARG=""
+PACKAGE_ARG=""
+NON_INTERACTIVE=0
 
 # Parse argumen
-for arg in "$@"; do
-    case "$arg" in
+while [[ $# -gt 0 ]]; do
+    case "$1" in
         --force|-Force|-f)
             FORCE=1
+            shift
             ;;
         --clone|-CloneLocal|clone)
             CLONE_LOCAL=1
+            shift
             ;;
         --sync|sync)
             ACTION="sync"
+            shift
             ;;
         --check|check)
             ACTION="check"
+            shift
+            ;;
+        --target|-t)
+            TARGET_ARG="$2"
+            shift 2
+            ;;
+        --package|-p)
+            PACKAGE_ARG="$2"
+            shift 2
+            ;;
+        --yes|-y|--non-interactive)
+            NON_INTERACTIVE=1
+            shift
             ;;
         --help|help|-h)
-            echo "Penggunaan: ./scripts/skill.sh [install|sync|check] [--force] [--clone]"
+            echo "Penggunaan: ./scripts/skill.sh [install|sync|check] [--force] [--clone] [--target all|1,2] [--package all|1,12] [--yes]"
             exit 0
+            ;;
+        *)
+            shift
             ;;
     esac
 done
@@ -105,75 +127,132 @@ clone_with_fallback() {
     return 1
 }
 
+copy_skill_to_agent() {
+    local ag_type="$1"
+    local ag_dir="$2"
+    local s_dir="$3"
+    local s_name="$4"
+
+    mkdir -p "${ag_dir}" 2>/dev/null || true
+
+    case "${ag_type}" in
+        native)
+            local dest="${ag_dir}/${s_name}"
+            if [[ -d "${dest}" && "${FORCE}" -eq 0 ]]; then
+                return 1
+            fi
+            rm -rf "${dest}" 2>/dev/null || true
+            cp -R "${s_dir}" "${dest}"
+            return 0
+            ;;
+        claude)
+            local dest_s="${ag_dir}/skills/${s_name}"
+            local dest_r="${ag_dir}/rules"
+            mkdir -p "${ag_dir}/skills" "${dest_r}" 2>/dev/null || true
+            if [[ ! -d "${dest_s}" || "${FORCE}" -eq 1 ]]; then
+                rm -rf "${dest_s}" 2>/dev/null || true
+                cp -R "${s_dir}" "${dest_s}"
+            fi
+            if [[ -f "${s_dir}/SKILL.md" ]]; then
+                cp "${s_dir}/SKILL.md" "${dest_r}/${s_name}.md" 2>/dev/null || true
+            fi
+            return 0
+            ;;
+        rule_md)
+            if [[ -f "${s_dir}/SKILL.md" ]]; then
+                cp "${s_dir}/SKILL.md" "${ag_dir}/${s_name}.md" 2>/dev/null || true
+                return 0
+            fi
+            return 1
+            ;;
+        rule_mdc)
+            if [[ -f "${s_dir}/SKILL.md" ]]; then
+                cp "${s_dir}/SKILL.md" "${ag_dir}/${s_name}.mdc" 2>/dev/null || true
+                return 0
+            fi
+            return 1
+            ;;
+    esac
+    return 1
+}
+
 run_install() {
-    echo -e "${C_MAGENTA}=== Antigravity Global Skill Installer (macOS & Linux) ===${C_RESET}"
-    echo -e "Target Skills  : ${TARGET_DIR}"
-    echo -e "Target Plugins : ${PLUGINS_DIR}\n"
+    echo -e "
+${C_MAGENTA}=== Universal AI Agent & Skill Suite Installer (macOS & Linux) ===${C_RESET}"
 
-    mkdir -p "${TARGET_DIR}"
-    mkdir -p "${PLUGINS_DIR}"
+    # Deteksi Lingkungan
+    local has_antigravity=0; [[ -d "${HOME}/.gemini" ]] && has_antigravity=1
+    local has_kiro=0; ([[ -d "${HOME}/.kiro" ]] || command -v kiro &>/dev/null) && has_kiro=1
+    local has_claude=0; ([[ -d "${HOME}/.claude" ]] || command -v claude &>/dev/null) && has_claude=1
+    local has_windsurf=0; ([[ -d "${HOME}/.codeium/windsurf" ]] || command -v windsurf &>/dev/null) && has_windsurf=1
+    local has_cursor=0; ([[ -d "${HOME}/.cursor" ]] || command -v cursor &>/dev/null) && has_cursor=1
+    local has_vscode=0; ([[ -d "${HOME}/.cline" ]] || [[ -d "${HOME}/.vscode" ]]) && has_vscode=1
 
-    # Pindai sumber repositori lokal
-    local has_local=0
-    if [[ -d "${WORKSPACE_DIR}" ]]; then
-        for r_entry in "${REPOS[@]}"; do
-            IFS='|' read -r r_name _ _ _ <<< "${r_entry}"
-            if [[ -d "${WORKSPACE_DIR}/${r_name}" ]]; then
-                has_local=1
-                break
-            fi
-        done
+    # Langkah 1: Pilih Target
+    local target_choice="${TARGET_ARG}"
+    if [[ -z "${target_choice}" && "${NON_INTERACTIVE}" -eq 0 && -t 0 ]]; then
+        echo -e "
+${C_CYAN}======================================================${C_RESET}"
+        echo -e "${C_CYAN} [1/2] DETEKSI TARGET AI AGENT / IDE DI KOMPUTER     ${C_RESET}"
+        echo -e "${C_CYAN}======================================================${C_RESET}"
+        [[ ${has_antigravity} -eq 1 ]] && echo -e "  ${C_GREEN}[x] 1. Google Antigravity      (Terdeteksi: ~/.gemini)${C_RESET}" || echo -e "  ${C_GRAY}[ ] 1. Google Antigravity      (Tidak terpasang)${C_RESET}"
+        [[ ${has_kiro} -eq 1 ]]        && echo -e "  ${C_GREEN}[x] 2. Kiro IDE                (Terdeteksi: ~/.kiro)${C_RESET}"   || echo -e "  ${C_GRAY}[ ] 2. Kiro IDE                (Tidak terpasang)${C_RESET}"
+        [[ ${has_claude} -eq 1 ]]      && echo -e "  ${C_GREEN}[x] 3. Claude Code / Desktop   (Terdeteksi: ~/.claude)${C_RESET}" || echo -e "  ${C_GRAY}[ ] 3. Claude Code / Desktop   (Tidak terpasang)${C_RESET}"
+        [[ ${has_windsurf} -eq 1 ]]    && echo -e "  ${C_GREEN}[x] 4. Windsurf (Codeium)      (Terdeteksi: ~/.codeium)${C_RESET}"|| echo -e "  ${C_GRAY}[ ] 4. Windsurf (Codeium)      (Tidak terpasang)${C_RESET}"
+        [[ ${has_cursor} -eq 1 ]]      && echo -e "  ${C_GREEN}[x] 5. Cursor IDE              (Terdeteksi: ~/.cursor)${C_RESET}" || echo -e "  ${C_GRAY}[ ] 5. Cursor IDE              (Tidak terpasang)${C_RESET}"
+        [[ ${has_vscode} -eq 1 ]]      && echo -e "  ${C_GREEN}[x] 6. VS Code / Cline         (Terdeteksi)${C_RESET}"            || echo -e "  ${C_GRAY}[ ] 6. VS Code / Cline         (Tidak terpasang)${C_RESET}"
+        
+        echo -e "
+  ${C_YELLOW}[A] Pasang ke SEMUA yang terdeteksi (Default)${C_RESET}"
+        echo -en "${C_CYAN}Pilih target [A atau nomor, contoh: 1,2] (Tekan Enter untuk Default [A]): ${C_RESET}"
+        read -r target_choice || target_choice="A"
     fi
+    [[ -z "${target_choice}" ]] && target_choice="A"
 
-    # Jika tidak ada repositori lokal atau sedang streaming via curl
-    if [[ "${has_local}" -eq 0 ]]; then
-        write_step "Mode Auto-Download remote aktif (tanpa clone lokal)..."
-        local temp_dir
-        temp_dir=$(mktemp -d 2>/dev/null || mktemp -d -t 'skills-dl')
-        local dl_count=0
-
-        for r_entry in "${REPOS[@]}"; do
-            IFS='|' read -r r_name r_pri r_up r_path <<< "${r_entry}"
-            local clone_dest="${temp_dir}/${r_name}"
-            if clone_with_fallback "${r_name}" "${r_pri}" "${r_up}" "${clone_dest}"; then
-                local search_path="${clone_dest}/${r_path}"
-                if [[ ! -d "${search_path}" ]]; then
-                    for cand in ".claude/skills" ".agents/skills" "skills"; do
-                        if [[ -d "${clone_dest}/${cand}" ]]; then
-                            search_path="${clone_dest}/${cand}"
-                            break
-                        fi
-                    done
-                fi
-
-                if [[ -d "${search_path}" ]]; then
-                    while IFS= read -r skill_file; do
-                        local s_dir
-                        s_dir="$(dirname "${skill_file}")"
-                        local s_name
-                        s_name="$(basename "${s_dir}")"
-                        local target_skill="${TARGET_DIR}/${s_name}"
-
-                        if [[ -d "${target_skill}" && "${FORCE}" -eq 0 ]]; then
-                            continue
-                        fi
-
-                        rm -rf "${target_skill}" 2>/dev/null || true
-                        cp -R "${s_dir}" "${target_skill}"
-                        ((dl_count++)) || true
-                    done < <(find "${search_path}" -type f -name "SKILL.md")
-                fi
-            fi
-        done
-
-        rm -rf "${temp_dir}" 2>/dev/null || true
-        local total_unique
-        total_unique=$(find "${TARGET_DIR}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l || echo 0)
-        echo -e "\n${C_MAGENTA}=== Installation Summary ===${C_RESET}"
-        write_ok "Total skill unik terpasang di global : ${total_unique}"
-        write_info "Total berkas skill diunduh           : ${dl_count}"
-        return 0
+    # Langkah 2: Pilih Paket
+    local package_choice="${PACKAGE_ARG}"
+    if [[ -z "${package_choice}" && "${NON_INTERACTIVE}" -eq 0 && -t 0 ]]; then
+        echo -e "
+${C_CYAN}======================================================${C_RESET}"
+        echo -e "${C_CYAN} [2/2] PEMILIHAN PAKET SKILL YANG INGIN DIPASANG     ${C_RESET}"
+        echo -e "${C_CYAN}======================================================${C_RESET}"
+        echo -e "  ${C_YELLOW}[A] SEMUA 155 Skill (12 Paket Lengkap) [Default]${C_RESET}
+  ----------------------------------------------------"
+        echo -e "  [ 1] Anti-Slop (6 Skill)
+  [ 2] Caveman & Token Efficiency (26 Skill)
+  [ 3] Ponytail (6 Skill)
+  [ 4] Agent Core Engineering (25 Skill)
+  [ 5] Engineering & Productivity (37 Skill)
+  [ 6] RTK Specialist (13 Skill)
+  [ 7] REA - Reverse Engineering (5 Skill)
+  [ 8] Apple Design & Motion (14 Skill)
+  [ 9] Security Audit (1 Skill)
+  [10] Superpowers Workflow (15 Skill)
+  [11] Chrome DevTools MCP (7 Skill)
+  [12] ARTEMIS Mobile Testing (1 Skill)"
+        echo -en "${C_CYAN}Pilih paket [A atau nomor, contoh: 1,8,12] (Tekan Enter untuk Default [A]): ${C_RESET}"
+        read -r package_choice || package_choice="A"
     fi
+    [[ -z "${package_choice}" ]] && package_choice="A"
+
+    # Bangun daftar target agent aktif
+    declare -a ACTIVE_TARGETS=()
+    if [[ "${target_choice}" =~ ^[Aa]$ ]]; then
+        [[ ${has_antigravity} -eq 1 ]] && ACTIVE_TARGETS+=("native|${HOME}/.gemini/config/skills|Google Antigravity")
+        [[ ${has_kiro} -eq 1 ]]        && ACTIVE_TARGETS+=("native|${HOME}/.kiro/skills|Kiro IDE")
+        [[ ${has_claude} -eq 1 ]]      && ACTIVE_TARGETS+=("claude|${HOME}/.claude|Claude Code")
+        [[ ${has_windsurf} -eq 1 ]]    && ACTIVE_TARGETS+=("rule_md|${HOME}/.codeium/windsurf/rules|Windsurf")
+        [[ ${has_cursor} -eq 1 ]]      && ACTIVE_TARGETS+=("rule_mdc|${HOME}/.cursor/rules|Cursor")
+        [[ ${has_vscode} -eq 1 ]]      && ACTIVE_TARGETS+=("rule_md|${HOME}/.cline/rules|VS Code Cline")
+    else
+        [[ "${target_choice}" =~ "1" || "${target_choice}" =~ "antigravity" ]] && ACTIVE_TARGETS+=("native|${HOME}/.gemini/config/skills|Google Antigravity")
+        [[ "${target_choice}" =~ "2" || "${target_choice}" =~ "kiro" ]]        && ACTIVE_TARGETS+=("native|${HOME}/.kiro/skills|Kiro IDE")
+        [[ "${target_choice}" =~ "3" || "${target_choice}" =~ "claude" ]]      && ACTIVE_TARGETS+=("claude|${HOME}/.claude|Claude Code")
+        [[ "${target_choice}" =~ "4" || "${target_choice}" =~ "windsurf" ]]    && ACTIVE_TARGETS+=("rule_md|${HOME}/.codeium/windsurf/rules|Windsurf")
+        [[ "${target_choice}" =~ "5" || "${target_choice}" =~ "cursor" ]]      && ACTIVE_TARGETS+=("rule_mdc|${HOME}/.cursor/rules|Cursor")
+        [[ "${target_choice}" =~ "6" || "${target_choice}" =~ "vscode" ]]      && ACTIVE_TARGETS+=("rule_md|${HOME}/.cline/rules|VS Code Cline")
+    fi
+    [[ ${#ACTIVE_TARGETS[@]} -eq 0 ]] && ACTIVE_TARGETS+=("native|${HOME}/.gemini/config/skills|Google Antigravity")
 
     # Instalasi dari repositori lokal
     local installed=0
@@ -204,35 +283,35 @@ run_install() {
                 s_dir="$(dirname "${skill_file}")"
                 local s_name
                 s_name="$(basename "${s_dir}")"
-                local target_skill="${TARGET_DIR}/${s_name}"
 
-                if [[ -d "${target_skill}" && "${FORCE}" -eq 0 ]]; then
-                    ((skipped++)) || true
-                    continue
-                fi
-
-                rm -rf "${target_skill}" 2>/dev/null || true
-                cp -R "${s_dir}" "${target_skill}"
-                ((installed++)) || true
+                for t_entry in "${ACTIVE_TARGETS[@]}"; do
+                    IFS='|' read -r t_type t_dir t_label <<< "${t_entry}"
+                    if copy_skill_to_agent "${t_type}" "${t_dir}" "${s_dir}" "${s_name}"; then
+                        ((installed++)) || true
+                    else
+                        ((skipped++)) || true
+                    fi
+                done
             done < <(find "${local_path}" -type f -name "SKILL.md")
         fi
     done
 
-    # Salin Plugin RTK & Superpowers jika ada
-    if [[ -d "${WORKSPACE_DIR}/rtk" ]]; then
-        cp -R "${WORKSPACE_DIR}/rtk" "${PLUGINS_DIR}/" 2>/dev/null || true
-    fi
-    if [[ -d "${WORKSPACE_DIR}/superpowers" ]]; then
-        cp -R "${WORKSPACE_DIR}/superpowers" "${PLUGINS_DIR}/" 2>/dev/null || true
+    # Salin Plugin Antigravity jika Antigravity aktif
+    if [[ "${target_choice}" =~ ^[Aa]$ || "${target_choice}" =~ "1" || "${target_choice}" =~ "antigravity" ]]; then
+        [[ -d "${WORKSPACE_DIR}/rtk" ]] && cp -R "${WORKSPACE_DIR}/rtk" "${PLUGINS_DIR}/" 2>/dev/null || true
+        [[ -d "${WORKSPACE_DIR}/superpowers" ]] && cp -R "${WORKSPACE_DIR}/superpowers" "${PLUGINS_DIR}/" 2>/dev/null || true
     fi
 
-    local total_unique
-    total_unique=$(find "${TARGET_DIR}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l || echo 0)
-    echo -e "\n${C_MAGENTA}=== Installation Summary ===${C_RESET}"
-    write_ok "Total skill unik terpasang di global : ${total_unique}"
-    write_ok "Skill baru terpasang / diperbarui    : ${installed}"
-    write_info "Berkas dilewati (sudah terpasang)    : ${skipped}"
-    write_ok "Seluruh skill Antigravity siap digunakan di macOS / Linux!"
+    echo -e "
+${C_MAGENTA}=== Installation Summary ===${C_RESET}"
+    write_ok "Pemasangan selesai ke ${#ACTIVE_TARGETS[@]} Target AI Agent:"
+    for t_entry in "${ACTIVE_TARGETS[@]}"; do
+        IFS='|' read -r _ t_dir t_label <<< "${t_entry}"
+        local count
+        count=$(find "${t_dir}" -mindepth 1 -maxdepth 1 2>/dev/null | wc -l || echo 0)
+        write_info "- ${t_label} : ${count} skill/rule terpasang (${t_dir})"
+    done
+    write_ok "Seluruh skill siap digunakan di semua lingkungan kerja yang dipilih!"
 }
 
 run_check() {

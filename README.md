@@ -1,6 +1,6 @@
 # Skill Agent — Google Antigravity Skill & Plugin Suite
 
-> Repositori resmi installer, pengelola, dan sinkronisasi otomatis seluruh **155 Skill Unik** dan **2 Plugin Lifecycle** untuk **Google Antigravity** di lintas sistem operasi (**Windows, macOS, dan Linux**).
+> Repositori resmi installer, pengelola, dan sinkronisasi otomatis seluruh **155 Skill Unik** dan **2 Plugin Lifecycle** untuk **Google Antigravity, Kiro IDE, Claude Code, Cursor, Windsurf, dan VS Code** di lintas sistem operasi (**Windows, macOS, dan Linux**).
 
 [![OS: Windows](https://img.shields.io/badge/OS-Windows-0078D6?logo=windows&logoColor=white)](#1-windows-powershell)
 [![OS: macOS](https://img.shields.io/badge/OS-macOS-000000?logo=apple&logoColor=white)](#2-macos-terminal)
@@ -117,7 +117,10 @@ chmod +x ./scripts/skill.sh
 
 | Parameter Windows | Parameter macOS / Linux | Fungsi / Kegunaan |
 | :--- | :--- | :--- |
-| *(tanpa argumen)* | *(tanpa argumen)* | Mode instalasi default: memasang skill baru, melewati yang sudah ada, auto-download jika folder lokal belum ada. |
+| *(tanpa argumen)* | *(tanpa argumen)* | Mode interaktif: memindai AI Agent (Antigravity, Kiro, Claude, Windsurf, Cursor, VS Code) dan memilih paket skill (tekan Enter untuk Default). |
+| `-Target <all\|1,2>` | `--target <all\|1,2>` | Menentukan target pemasangan secara langsung (`antigravity`, `kiro`, `claude`, `windsurf`, `cursor`, `vscode`, atau `all`). |
+| `-Package <all\|1,12>` | `--package <all\|1,12>` | Menentukan paket skill yang dipasang (nomor 1-12 atau `all`). |
+| `-NonInteractive` / `-Yes` | `--yes` / `-y` | Menjalankan instalasi non-interaktif tanpa konfirmasi prompt. |
 | `-Force` | `--force` / `-f` | Menimpa (*overwrite*) seluruh berkas skill yang sudah ada. |
 | `-CloneLocal` | `--clone` | Mengkloning seluruh repositori Git ke folder kerja lokal saat ini. |
 | `-Check` | `--check` | Memeriksa integritas pemetaan `$SKILL_MAP` dan repositori lokal. |
