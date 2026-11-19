@@ -162,14 +162,6 @@ $SKILL_MAP = @{
         backup_branch        = "main"
     }
 
-    'hermes' = @{
-        upstream_repo        = "https://github.com/agent-bara/hermes-bara.git"
-        upstream_skill_path  = "skills"
-        local_skill_prefixes = @("hermes")
-        backup_repo          = "https://github.com/agent-bara/hermes-bara.git"
-        backup_branch        = "main"
-    }
-
     'rea' = @{
         upstream_repo        = "https://github.com/morluto/rea.git"
         upstream_skill_path  = ".agents/skills"

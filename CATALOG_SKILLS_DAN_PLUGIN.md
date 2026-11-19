@@ -1,6 +1,6 @@
 # 📚 Katalog Lengkap Skill & Plugin Antigravity
 
-> Dokumentasi resmi dan panduan referensi seluruh **155 Skill** dan **2 Plugin Antigravity** yang terpasang secara global di Google Antigravity (`~/.gemini/config/`).
+> Dokumentasi resmi dan panduan referensi seluruh **154 Skill** dan **2 Plugin Antigravity** yang terpasang secara global di Google Antigravity (`~/.gemini/config/`).
 
 ---
 
@@ -19,9 +19,8 @@
    - [Paket 7: REA - Reverse Engineering Anything (5 Skill)](#paket-7-rea---reverse-engineering-anything-5-skill)
    - [Paket 8: Apple Design, Motion & UI Polish (14 Skill)](#paket-8-apple-design-motion--ui-polish-14-skill)
    - [Paket 9: Security Audit & Pen-Testing (1 Skill)](#paket-9-security-audit--pen-testing-1-skill)
-   - [Paket 10: Multi-Agent & Orchestration (1 Skill)](#paket-10-multi-agent--orchestration-1-skill)
-   - [Paket 11: Superpowers Agentic Workflow (15 Skill)](#paket-11-superpowers-agentic-workflow-15-skill)
-   - [Paket 12: Chrome DevTools & Browser Automation (7 Skill)](#paket-12-chrome-devtools--browser-automation-7-skill)
+   - [Paket 10: Superpowers Agentic Workflow (15 Skill)](#paket-10-superpowers-agentic-workflow-15-skill)
+   - [Paket 11: Chrome DevTools & Browser Automation (7 Skill)](#paket-11-chrome-devtools--browser-automation-7-skill)
 4. [Cara Kerja & Panduan Penggunaan Skill](#-cara-kerja--panduan-penggunaan-skill)
 
 ---
@@ -294,17 +293,7 @@ Audit keamanan mendalam, deteksi kerentanan OWASP, analisis API, sanitasi masuka
 
 ---
 
-### Paket 10: Multi-Agent & Orchestration (1 Skill)
-
-Integrasi ekosistem orkestrasi agen eksternal dan delegasi tugas otonom.
-
-| No | Nama Skill | Deskripsi & Kapan Digunakan |
-| :---: | :--- | :--- |
-| 1 | `hermes` | Integrasi dan orkestrasi komunikasi agen asisten Hermes ke dalam alur kerja Google Antigravity. |
-
----
-
-### Paket 11: Superpowers Agentic Workflow (15 Skill)
+### Paket 10: Superpowers Agentic Workflow (15 Skill)
 
 Metodologi rekayasa perangkat lunak agentik komprehensif oleh Jesse Vincent (`obra/superpowers`). Mengarahkan agen untuk bekerja dengan disiplin rekayasa tingkat tinggi: brainstorming terstruktur sebelum coding, perencanaan implementasi bertahap (*spec-driven*), TDD ketat, isolasi git worktrees, eksekusi sub-agen paralel, tinjauan kode adversarial, dan verifikasi bukti sebelum menyelesaikan tugas.
 
@@ -328,7 +317,7 @@ Metodologi rekayasa perangkat lunak agentik komprehensif oleh Jesse Vincent (`ob
 
 ---
 
-### Paket 12: Chrome DevTools & Browser Automation (7 Skill)
+### Paket 11: Chrome DevTools & Browser Automation (7 Skill)
 
 Perkakas resmi dari tim Chrome DevTools (`ChromeDevTools/chrome-devtools-mcp`) untuk inspeksi browser mendalam, otomatisasi pengujian antarmuka, profil performa Core Web Vitals, audit aksesibilitas, dan diagnosis memori runtime melalui protokol Chrome DevTools MCP.
 
@@ -360,4 +349,4 @@ Anda juga dapat secara langsung menyebutkan nama skill dalam pesan Anda:
 - *Contoh*: `"Gunakan skill security-audit untuk menguji kerentanan API."`
 
 ---
-*Dokumen ini diperbarui secara berkala dan memetakan seluruh 155 skill terpasang di Google Antigravity.*
+*Dokumen ini diperbarui secara berkala dan memetakan seluruh 154 skill terpasang di Google Antigravity.*

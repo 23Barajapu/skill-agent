@@ -1,11 +1,11 @@
 # 🚀 Skill Agent — Google Antigravity Skill & Plugin Suite
 
-> Repositori resmi installer, pengelola, dan sinkronisasi otomatis seluruh **155 Skill Unik** dan **2 Plugin Lifecycle** untuk **Google Antigravity** di lintas sistem operasi (**Windows, macOS, dan Linux**).
+> Repositori resmi installer, pengelola, dan sinkronisasi otomatis seluruh **154 Skill Unik** dan **2 Plugin Lifecycle** untuk **Google Antigravity** di lintas sistem operasi (**Windows, macOS, dan Linux**).
 
 [![OS: Windows](https://img.shields.io/badge/OS-Windows-0078D6?logo=windows&logoColor=white)](#-1-windows)
 [![OS: macOS](https://img.shields.io/badge/OS-macOS-000000?logo=apple&logoColor=white)](#-2-macos)
 [![OS: Linux](https://img.shields.io/badge/OS-Linux-FCC624?logo=linux&logoColor=black)](#-3-linux)
-[![Skills: 155](https://img.shields.io/badge/Skills-155%20Installed-brightgreen)](#-paket-skill-yang-tersedia)
+[![Skills: 154](https://img.shields.io/badge/Skills-154%20Installed-brightgreen)](#-paket-skill-yang-tersedia)
 [![Plugins: 2](https://img.shields.io/badge/Plugins-RTK%20%26%20Superpowers-blue)](#-plugin-antigravity)
 
 ---
@@ -19,7 +19,7 @@
    - [3. Linux](#3-linux)
 4. [Opsi & Parameter Instalasi](#-opsi--parameter-instalasi)
 5. [Sinkronisasi Berkala (Sync Upstream)](#-sinkronisasi-berkala-sync)
-6. [Paket Skill yang Tersedia (12 Paket)](#-paket-skill-yang-tersedia)
+6. [Paket Skill yang Tersedia (11 Paket)](#-paket-skill-yang-tersedia)
 7. [Dokumentasi Lengkap](#-dokumentasi-lengkap)
 
 ---
@@ -28,7 +28,7 @@
 
 - **Dual-Mode Installer (Offline & Auto-Download)**:
   - **Mode Cepat / Offline**: Jika folder repositori lokal sudah ada, installer langsung menyalinnya secara instan tanpa membutuhkan koneksi internet.
-  - **Mode Auto-Download**: Jika folder lokal belum ada (misal di PC baru yang baru saja meng-clone repositori ini), installer secara otomatis mengunduh seluruh 155 skill dan plugin langsung dari GitHub ke Antigravity.
+  - **Mode Auto-Download**: Jika folder lokal belum ada (misal di PC baru yang baru saja meng-clone repositori ini), installer secara otomatis mengunduh seluruh 154 skill dan plugin langsung dari GitHub ke Antigravity.
 - **Dual-Source Fallback (Private Org & Public Upstream)**:
   - **Primary**: Mengutamakan repositori organisasi (`agent-bara/*-bara.git`) untuk mendapatkan konfigurasi dan kustomisasi terbaru.
   - **Fallback**: Jika repositori organisasi bersifat **Private** dan lingkungan baru belum memiliki token/autentikasi GitHub, installer otomatis beralih mengunduh dari repositori *official upstream* publik resmi (`addyosmani`, `obra`, `mattpocock`, dll.) tanpa gangguan atau error.
@@ -170,7 +170,7 @@ Jika Anda ingin memperbarui skill dengan rilis upstream terbaru dari GitHub, jal
 
 ## 📦 Paket Skill yang Tersedia
 
-Seluruh **155 Skill Unik** dikelompokkan ke dalam 12 paket kapabilitas:
+Seluruh **154 Skill Unik** dikelompokkan ke dalam 11 paket kapabilitas:
 
 | Paket | Nama Kategori | Jumlah | Cakupan Utama |
 | :---: | :--- | :---: | :--- |
@@ -183,10 +183,9 @@ Seluruh **155 Skill Unik** dikelompokkan ke dalam 12 paket kapabilitas:
 | **Paket 7** | **REA - Reverse Engineering Anything** | 5 Skill | Rekayasa balik biner native, aplikasi Electron, runtime browser, dan pembuatan AgentEnv. |
 | **Paket 8** | **Apple Design, Motion & UI Polish** | 14 Skill | Fisika fluida Apple, animasi 60/120fps, nuansa Emil Kowalski, interaksi mobile native, & Swift modern. |
 | **Paket 9** | **Security Audit & Pen-Testing** | 1 Skill | Audit keamanan mendalam, deteksi kerentanan OWASP, inspeksi API, dan pen-testing. |
-| **Paket 10** | **Multi-Agent & Orchestration** | 1 Skill | Integrasi dan protokol komunikasi antar agen asisten otonom Hermes. |
-| **Paket 11** | **Superpowers Agentic Workflow** | 15 Skill | Metodologi rekayasa agen (brainstorming, spec-first, TDD ketat, git worktree, delegasi paralel). |
-| **Paket 12** | **Chrome DevTools & Browser Automation** | 7 Skill | Otomasi browser via MCP, audit aksesibilitas (a11y), profil LCP/Core Web Vitals, dan memory leak. |
-| **TOTAL** | | **155 Skill** | **12 Repositori Terkurasi** |
+| **Paket 10** | **Superpowers Agentic Workflow** | 15 Skill | Metodologi rekayasa agen (brainstorming, spec-first, TDD ketat, git worktree, delegasi paralel). |
+| **Paket 11** | **Chrome DevTools & Browser Automation** | 7 Skill | Otomasi browser via MCP, audit aksesibilitas (a11y), profil LCP/Core Web Vitals, dan memory leak. |
+| **TOTAL** | | **154 Skill** | **11 Repositori Terkurasi** |
 
 ---
 
