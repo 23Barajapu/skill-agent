@@ -96,6 +96,8 @@ $SKILL_MAP = @{
                                   "caveman-explore", "caveman-help", "caveman-learn",
                                   "caveman-manage", "caveman-optimize", "caveman-review",
                                   "caveman-setup", "caveman-stats", "cavecrew",
+                                  "cave", "megacave", "ultracave", "graphify",
+                                  "quality-control", "bahasa-indonesia",
                                   "investigate-first", "lean-build", "migration",
                                   "safe-refactor", "surgical-patch", "verify-and-stop")
         backup_repo          = "https://github.com/agent-bara/caveman-bara.git"
@@ -120,7 +122,7 @@ $SKILL_MAP = @{
     rtk = @{
         upstream_repo        = "https://github.com/rtk-ai/rtk.git"
         upstream_skill_path  = "skills"
-        local_skill_prefixes = @("code-simplifier", "design-patterns", "issue-triage",
+        local_skill_prefixes = @("rtk", "code-simplifier", "design-patterns", "issue-triage",
                                   "performance", "pr-review", "pr-triage", "repo-recap",
                                   "rtk-tdd", "rtk-triage", "security-guardian", "ship", "tdd-rust")
         local_plugin_path    = "rtk"
