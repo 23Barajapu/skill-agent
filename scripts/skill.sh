@@ -75,6 +75,7 @@ declare -a REPOS=(
     "rtk|https://github.com/agent-bara/rtk-bara.git|https://github.com/rtk-ai/rtk.git|skills"
     "security-audit-skill|https://github.com/agent-bara/security-audit-skill.git|https://github.com/cloudflare/security-audit-skill.git|skills"
     "superpowers|https://github.com/agent-bara/superpowers-bara.git|https://github.com/obra/superpowers.git|skills"
+    "artemis|https://github.com/agent-bara/artemis-bara.git|https://github.com/google/artemis.git|skills"
 )
 
 clone_with_fallback() {

@@ -1,6 +1,6 @@
 # 📚 Katalog Lengkap Skill & Plugin Antigravity
 
-> Dokumentasi resmi dan panduan referensi seluruh **154 Skill** dan **2 Plugin Antigravity** yang terpasang secara global di Google Antigravity (`~/.gemini/config/`).
+> Dokumentasi resmi dan panduan referensi seluruh **155 Skill** dan **2 Plugin Antigravity** yang terpasang secara global di Google Antigravity (`~/.gemini/config/`).
 
 ---
 
@@ -21,6 +21,7 @@
    - [Paket 9: Security Audit & Pen-Testing (1 Skill)](#paket-9-security-audit--pen-testing-1-skill)
    - [Paket 10: Superpowers Agentic Workflow (15 Skill)](#paket-10-superpowers-agentic-workflow-15-skill)
    - [Paket 11: Chrome DevTools & Browser Automation (7 Skill)](#paket-11-chrome-devtools--browser-automation-7-skill)
+   - [Paket 12: Mobile Automation & Testing - ARTEMIS (1 Skill)](#paket-12-mobile-automation--testing---artemis-1-skill)
 4. [Cara Kerja & Panduan Penggunaan Skill](#-cara-kerja--panduan-penggunaan-skill)
 
 ---
@@ -333,6 +334,16 @@ Perkakas resmi dari tim Chrome DevTools (`ChromeDevTools/chrome-devtools-mcp`) u
 
 ---
 
+### Paket 12: Mobile Automation & Testing — ARTEMIS (1 Skill)
+
+Framework multimodal resmi dari tim Google (`google/artemis`) untuk otomatisasi pengujian Android otonom, eksplorasi antarmuka aplikasi seluler secara interaktif, diagnostik Logcat/trace, dan orkestrasi perintah ADB melalui Model Context Protocol (MCP).
+
+| No | Nama Skill | Deskripsi & Kapan Digunakan |
+| :---: | :--- | :--- |
+| 1 | `artemis` | Pengujian aplikasi Android otonom, eksplorasi UI lintas aplikasi, diagnostik Logcat/crash/ANR, serta otomatisasi interaksi perangkat Android fisik maupun emulator via ADB & MCP. |
+
+---
+
 ## 💡 Cara Kerja & Panduan Penggunaan Skill
 
 ### 1. Pemanggilan Otomatis oleh Model (*Model-Invoked*)
@@ -341,12 +352,14 @@ Anda tidak perlu menghafal atau mengetikkan nama skill secara manual. Berikan in
 - *Contoh*: `"Buatkan animasi pembuka halaman login yang smooth ala Apple"` -> Agen otomatis mengaktifkan skill ``apple-design`` atau ``animate``.
 - *Contoh*: `"Audit keamanan endpoint pembayaran ini terhadap OWASP"` -> Agen otomatis mengaktifkan skill ``security-audit`` atau ``security-and-hardening``.
 - *Contoh*: `"Stress-test form input ini dengan worst-case data"` -> Agen otomatis mengaktifkan skill ``break-ui``.
+- *Contoh*: `"Tolong eksplorasi dan buat skenario testing Android untuk alur checkout"` -> Agen otomatis mengaktifkan skill ``artemis``.
 
 ### 2. Pemanggilan Eksplisit (*Explicit Invocation*)
 Anda juga dapat secara langsung menyebutkan nama skill dalam pesan Anda:
 - *Contoh*: `"Gunakan skill apple-design untuk memoles antarmuka modal ini."`
 - *Contoh*: `"Jalankan caveman mode untuk respon kali ini agar hemat token."`
 - *Contoh*: `"Gunakan skill security-audit untuk menguji kerentanan API."`
+- *Contoh*: `"Gunakan skill artemis untuk mendiagnosis crash dan memeriksa Logcat perangkat Android."`
 
 ---
-*Dokumen ini diperbarui secara berkala dan memetakan seluruh 154 skill terpasang di Google Antigravity.*
+*Dokumen ini diperbarui secara berkala dan memetakan seluruh 155 skill terpasang di Google Antigravity.*

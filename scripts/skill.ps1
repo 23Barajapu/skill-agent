@@ -75,10 +75,11 @@ $REMOTE_REPOS = @(
     @{ Name = "rea";                  Url = "https://github.com/agent-bara/rea-bara.git";                 UpstreamUrl = "https://github.com/morluto/rea.git";                     SkillPath = ".agents/skills" },
     @{ Name = "rtk";                  Url = "https://github.com/agent-bara/rtk-bara.git";                 UpstreamUrl = "https://github.com/rtk-ai/rtk.git";                     SkillPath = "skills" },
     @{ Name = "security-audit-skill"; Url = "https://github.com/agent-bara/security-audit-skill.git";    UpstreamUrl = "https://github.com/cloudflare/security-audit-skill.git";SkillPath = "skills" },
-    @{ Name = "superpowers";          Url = "https://github.com/agent-bara/superpowers-bara.git";         UpstreamUrl = "https://github.com/obra/superpowers.git";               SkillPath = "skills" }
+    @{ Name = "superpowers";          Url = "https://github.com/agent-bara/superpowers-bara.git";         UpstreamUrl = "https://github.com/obra/superpowers.git";               SkillPath = "skills" },
+    @{ Name = "artemis";              Url = "https://github.com/agent-bara/artemis-bara.git";             UpstreamUrl = "https://github.com/google/artemis.git";                 SkillPath = "skills" }
 )
 
-# Pemetaan lengkap 154 Skill untuk Sinkronisasi & Backup
+# Pemetaan lengkap 155 Skill untuk Sinkronisasi & Backup
 $SKILL_MAP = @{
     caveman = @{
         upstream_repo        = "https://github.com/JuliusBrussee/caveman.git"
@@ -197,6 +198,13 @@ $SKILL_MAP = @{
                                   "cookie-debugging", "debug-optimize-lcp", "memory-leak-debugging",
                                   "troubleshooting")
         backup_repo          = "https://github.com/agent-bara/chrome-devtools-mcp-bara.git"
+        backup_branch        = "main"
+    }
+    artemis = @{
+        upstream_repo        = "https://github.com/google/artemis.git"
+        upstream_skill_path  = "skills"
+        local_skill_prefixes = @("artemis")
+        backup_repo          = "https://github.com/agent-bara/artemis-bara.git"
         backup_branch        = "main"
     }
 }
@@ -462,7 +470,7 @@ function Run-Check {
     Write-Host "`n=== Skill & Repository Integrity Check ===" -ForegroundColor Cyan
 
     Write-Step "Mengecek apakah ada folder repository skill baru di direktori lokal..."
-    $ignored = @('mcp-bahasa-indonesia', 'scripts', 'skills', 'docs', 'artemis', 'markitdown', 'awesome-design-md')
+    $ignored = @('mcp-bahasa-indonesia', 'scripts', 'skills', 'docs', 'markitdown', 'awesome-design-md')
     $localDirs = @(Get-ChildItem -Path $WORKSPACE_DIR -Directory | Where-Object { $_.Name -notmatch '^\.' -and $ignored -notcontains $_.Name })
     
     $knownKeys = @{}
