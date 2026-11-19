@@ -1,4 +1,4 @@
-﻿# Antigravity All-in-One Skill Manager (Windows PowerShell)
+# Antigravity All-in-One Skill Manager (Windows PowerShell)
 # Repositori resmi: https://github.com/23Barajapu/skill-agent
 
 function Invoke-AntigravitySkillManager {
