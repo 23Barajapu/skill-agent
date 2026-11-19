@@ -73,7 +73,7 @@ $REMOTE_REPOS = @(
     @{ Name = "engineering-skills";   Url = "https://github.com/agent-bara/engineering-skills-bara.git"; UpstreamUrl = "https://github.com/mattpocock/skills.git";            SkillPath = "skills" },
     @{ Name = "ponytail-bara";        Url = "https://github.com/agent-bara/ponytail-bara.git";           UpstreamUrl = "https://github.com/DietrichGebert/ponytail.git";        SkillPath = "skills" },
     @{ Name = "rea";                  Url = "https://github.com/agent-bara/rea-bara.git";                 UpstreamUrl = "https://github.com/morluto/rea.git";                     SkillPath = ".agents/skills" },
-    @{ Name = "rtk";                  Url = "https://github.com/agent-bara/rtk-bara.git";                 UpstreamUrl = "https://github.com/rtk-ai/rtk.git";                     SkillPath = "skills" },
+    @{ Name = "rtk";                  Url = "https://github.com/agent-bara/rtk-bara.git";                 UpstreamUrl = "https://github.com/rtk-ai/rtk.git";                     SkillPath = ".claude/skills" },
     @{ Name = "security-audit-skill"; Url = "https://github.com/agent-bara/security-audit-skill.git";    UpstreamUrl = "https://github.com/cloudflare/security-audit-skill.git";SkillPath = "skills" },
     @{ Name = "superpowers";          Url = "https://github.com/agent-bara/superpowers-bara.git";         UpstreamUrl = "https://github.com/obra/superpowers.git";               SkillPath = "skills" },
     @{ Name = "artemis";              Url = "https://github.com/agent-bara/artemis-bara.git";             UpstreamUrl = "https://github.com/google/artemis.git";                 SkillPath = "skills" }
@@ -368,6 +368,12 @@ function Run-Install {
                 $cloned = Invoke-GitCloneWithFallback -Name $repo.Name -PrimaryUrl $repo.Url -FallbackUrl $repo.UpstreamUrl -Destination $cloneTarget
                 if ($cloned) {
                     $skillBase = Join-Path $cloneTarget $repo.SkillPath
+                    if (-not (Test-Path $skillBase)) {
+                        foreach ($cand in @(".claude\skills", ".agents\skills", "skills")) {
+                            $t = Join-Path $cloneTarget $cand
+                            if (Test-Path $t) { $skillBase = $t; break }
+                        }
+                    }
                     if (Test-Path $skillBase) {
                         $sList = @(Get-ChildItem -Path $skillBase -Filter "SKILL.md" -Recurse -File)
                         foreach ($sk in $sList) {
@@ -381,8 +387,10 @@ function Run-Install {
                     }
                 }
             }
+            $totalUnique = @(Get-ChildItem -Path $LOCAL_SKILLS_DIR -Directory).Count
             Write-Host "`n=== Installation Summary ===" -ForegroundColor Magenta
-            Write-Ok "Total skill berhasil diunduh dan dipasang: $dlCount"
+            Write-Ok "Total skill unik terpasang di global : $totalUnique"
+            Write-Info "Total berkas skill diunduh           : $dlCount"
             return
         } finally {
             Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
@@ -452,9 +460,11 @@ function Run-Install {
         }
     }
 
+    $totalUnique = @(Get-ChildItem -Path $LOCAL_SKILLS_DIR -Directory).Count
     Write-Host "`n=== Installation Summary ===" -ForegroundColor Magenta
-    Write-Ok "Skill baru terpasang / diperbarui : $installed"
-    Write-Info "Skill dilewati (sudah terpasang)  : $skipped"
+    Write-Ok "Total skill unik terpasang di global : $totalUnique"
+    Write-Ok "Skill baru terpasang / diperbarui    : $installed"
+    Write-Info "Berkas dilewati (sudah terpasang)    : $skipped"
     if ($errors.Count -gt 0) {
         Write-Fail "Terjadi $($errors.Count) kesalahan:"
         $errors | Format-Table -AutoSize

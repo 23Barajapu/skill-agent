@@ -72,7 +72,7 @@ declare -a REPOS=(
     "engineering-skills|https://github.com/agent-bara/engineering-skills-bara.git|https://github.com/mattpocock/skills.git|skills"
     "ponytail-bara|https://github.com/agent-bara/ponytail-bara.git|https://github.com/DietrichGebert/ponytail.git|skills"
     "rea|https://github.com/agent-bara/rea-bara.git|https://github.com/morluto/rea.git|.agents/skills"
-    "rtk|https://github.com/agent-bara/rtk-bara.git|https://github.com/rtk-ai/rtk.git|skills"
+    "rtk|https://github.com/agent-bara/rtk-bara.git|https://github.com/rtk-ai/rtk.git|.claude/skills"
     "security-audit-skill|https://github.com/agent-bara/security-audit-skill.git|https://github.com/cloudflare/security-audit-skill.git|skills"
     "superpowers|https://github.com/agent-bara/superpowers-bara.git|https://github.com/obra/superpowers.git|skills"
     "artemis|https://github.com/agent-bara/artemis-bara.git|https://github.com/google/artemis.git|skills"
@@ -137,6 +137,15 @@ run_install() {
             local clone_dest="${temp_dir}/${r_name}"
             if clone_with_fallback "${r_name}" "${r_pri}" "${r_up}" "${clone_dest}"; then
                 local search_path="${clone_dest}/${r_path}"
+                if [[ ! -d "${search_path}" ]]; then
+                    for cand in ".claude/skills" ".agents/skills" "skills"; do
+                        if [[ -d "${clone_dest}/${cand}" ]]; then
+                            search_path="${clone_dest}/${cand}"
+                            break
+                        fi
+                    done
+                fi
+
                 if [[ -d "${search_path}" ]]; then
                     while IFS= read -r skill_file; do
                         local s_dir
@@ -158,8 +167,11 @@ run_install() {
         done
 
         rm -rf "${temp_dir}" 2>/dev/null || true
+        local total_unique
+        total_unique=$(find "${TARGET_DIR}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l || echo 0)
         echo -e "\n${C_MAGENTA}=== Installation Summary ===${C_RESET}"
-        write_ok "Total skill berhasil dipasang / diperbarui: ${dl_count}"
+        write_ok "Total skill unik terpasang di global : ${total_unique}"
+        write_info "Total berkas skill diunduh           : ${dl_count}"
         return 0
     fi
 
@@ -172,6 +184,17 @@ run_install() {
         local local_path="${WORKSPACE_DIR}/${r_name}/${r_path}"
         if [[ ! -d "${local_path}" ]]; then
             local_path="${WORKSPACE_DIR}/${r_name}-bara/${r_path}"
+        fi
+        if [[ ! -d "${local_path}" ]]; then
+            for cand in ".claude/skills" ".agents/skills" "skills"; do
+                if [[ -d "${WORKSPACE_DIR}/${r_name}/${cand}" ]]; then
+                    local_path="${WORKSPACE_DIR}/${r_name}/${cand}"
+                    break
+                elif [[ -d "${WORKSPACE_DIR}/${r_name}-bara/${cand}" ]]; then
+                    local_path="${WORKSPACE_DIR}/${r_name}-bara/${cand}"
+                    break
+                fi
+            done
         fi
 
         if [[ -d "${local_path}" ]]; then
@@ -203,9 +226,12 @@ run_install() {
         cp -R "${WORKSPACE_DIR}/superpowers" "${PLUGINS_DIR}/" 2>/dev/null || true
     fi
 
+    local total_unique
+    total_unique=$(find "${TARGET_DIR}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l || echo 0)
     echo -e "\n${C_MAGENTA}=== Installation Summary ===${C_RESET}"
-    write_ok "Skill baru terpasang / diperbarui : ${installed}"
-    write_info "Skill dilewati (sudah terpasang)  : ${skipped}"
+    write_ok "Total skill unik terpasang di global : ${total_unique}"
+    write_ok "Skill baru terpasang / diperbarui    : ${installed}"
+    write_info "Berkas dilewati (sudah terpasang)    : ${skipped}"
     write_ok "Seluruh skill Antigravity siap digunakan di macOS / Linux!"
 }
 
