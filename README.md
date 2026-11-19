@@ -1,46 +1,67 @@
 # 🚀 Skill Agent — Google Antigravity Skill & Plugin Suite
 
-> Repositori resmi installer, pengelola, dan sinkronisasi otomatis seluruh **154 Skill Unik** dan **2 Plugin Lifecycle** untuk **Google Antigravity** di lintas sistem operasi (**Windows, macOS, dan Linux**).
+> Repositori resmi installer, pengelola, dan sinkronisasi otomatis seluruh **220 Skill Unik** dan **2 Plugin Lifecycle** untuk **Google Antigravity** di lintas sistem operasi (**Windows, macOS, dan Linux**).
 
 [![OS: Windows](https://img.shields.io/badge/OS-Windows-0078D6?logo=windows&logoColor=white)](#-1-windows)
 [![OS: macOS](https://img.shields.io/badge/OS-macOS-000000?logo=apple&logoColor=white)](#-2-macos)
 [![OS: Linux](https://img.shields.io/badge/OS-Linux-FCC624?logo=linux&logoColor=black)](#-3-linux)
-[![Skills: 154](https://img.shields.io/badge/Skills-154%20Installed-brightgreen)](#-paket-skill-yang-tersedia)
+[![Skills: 220](https://img.shields.io/badge/Skills-220%20Installed-brightgreen)](#-paket-skill-yang-tersedia-12-paket)
 [![Plugins: 2](https://img.shields.io/badge/Plugins-RTK%20%26%20Superpowers-blue)](#-plugin-antigravity)
+
+---
+
+## ⚡ Instalasi Cepat Satu Baris (Web Installer / One-Liner)
+
+Anda **tidak perlu meng-clone repositori** ini terlebih dahulu. Cukup buka terminal pada komputer Anda dan jalankan satu baris perintah sesuai sistem operasi:
+
+### 🪟 1. Windows (PowerShell)
+Buka **PowerShell** dan paste perintah berikut:
+```powershell
+irm https://raw.githubusercontent.com/23Barajapu/skill-agent/main/scripts/skill.ps1 | iex
+```
+
+### 🍎 2. macOS (Terminal)
+Buka **Terminal** (zsh/bash) dan paste perintah berikut:
+```bash
+curl -fsSL https://raw.githubusercontent.com/23Barajapu/skill-agent/main/scripts/skill.sh | bash
+```
+
+### 🐧 3. Linux (Terminal)
+Buka terminal distribusi Linux apa pun (Ubuntu, Debian, Fedora, Arch, dll.):
+```bash
+curl -fsSL https://raw.githubusercontent.com/23Barajapu/skill-agent/main/scripts/skill.sh | bash
+```
+
+> **Catatan**: Installer otomatis mendeteksi konfigurasi global Antigravity (`~/.gemini/config/`), mengunduh seluruh 220 skill dan 2 plugin secara paralel dengan *dual-source fallback* (primary org & upstream publik), serta memperbaiki frontmatter skill secara otomatis.
 
 ---
 
 ## 📑 Daftar Isi
 1. [Fitur Utama](#-fitur-utama)
 2. [Lokasi Konfigurasi Global Antigravity (3 OS)](#-lokasi-konfigurasi-global-antigravity-3-os)
-3. [Panduan Instalasi (Windows, macOS, Linux)](#-panduan-instalasi-3-os)
-   - [1. Windows](#1-windows)
-   - [2. macOS](#2-macos)
-   - [3. Linux](#3-linux)
-4. [Opsi & Parameter Instalasi](#-opsi--parameter-instalasi)
+3. [Penggunaan Lokal (Bagi Pengelola / Maintainer)](#-penggunaan-lokal-bagi-pengelola--maintainer)
+4. [Opsi & Parameter CLI](#-opsi--parameter-cli)
 5. [Sinkronisasi Berkala (Sync Upstream)](#-sinkronisasi-berkala-sync)
-6. [Paket Skill yang Tersedia (11 Paket)](#-paket-skill-yang-tersedia)
+6. [Paket Skill yang Tersedia (12 Paket)](#-paket-skill-yang-tersedia-12-paket)
 7. [Dokumentasi Lengkap](#-dokumentasi-lengkap)
 
 ---
 
 ## ✨ Fitur Utama
 
-- **Dual-Mode Installer (Offline & Auto-Download)**:
-  - **Mode Cepat / Offline**: Jika folder repositori lokal sudah ada, installer langsung menyalinnya secara instan tanpa membutuhkan koneksi internet.
-  - **Mode Auto-Download**: Jika folder lokal belum ada (misal di PC baru yang baru saja meng-clone repositori ini), installer secara otomatis mengunduh seluruh 154 skill dan plugin langsung dari GitHub ke Antigravity.
+- **One-Liner Web Streaming (`irm` / `curl`)**: Pemasangan instan di perangkat mana pun tanpa perlu dependensi atau clone manual.
+- **Root Repositori Bersih (Zero-Script in Root)**: Seluruh file eksekusi dan engine modular tersimpan rapi di subdirektori `scripts/`, menyisakan tampilan root yang rapi dan elegan.
 - **Dual-Source Fallback (Private Org & Public Upstream)**:
-  - **Primary**: Mengutamakan repositori organisasi (`agent-bara/*-bara.git`) untuk mendapatkan konfigurasi dan kustomisasi terbaru.
-  - **Fallback**: Jika repositori organisasi bersifat **Private** dan lingkungan baru belum memiliki token/autentikasi GitHub, installer otomatis beralih mengunduh dari repositori *official upstream* publik resmi (`addyosmani`, `obra`, `mattpocock`, dll.) tanpa gangguan atau error.
-- **Dukungan Penuh 3 OS**: Skrip siap pakai untuk Windows (`.bat` / `.ps1`) serta macOS dan Linux (`.sh`).
-- **Progressive Disclosure**: Instruksi skill dimuat secara *on-demand* saat dibutuhkan oleh agen AI, menjaga kuota token percakapan tetap hemat.
+  - **Primary**: Mengutamakan repositori organisasi (`agent-bara/*-bara.git`) untuk kustomisasi terbaru.
+  - **Fallback**: Jika repositori privat dan lingkungan belum memiliki token GitHub, installer otomatis beralih ke repositori *official upstream* publik resmi (`addyosmani`, `obra`, `mattpocock`, `JuliusBrussee`, dll.) tanpa hambatan.
+- **Progressive Disclosure**: Konten skill hanya dimuat *on-demand* saat dibutuhkan oleh agen AI, menghemat pemakaian token konteks.
 - **Validasi Frontmatter Otomatis**: Memastikan header `name:` dan `description:` pada setiap `SKILL.md` valid dan sesuai standar Google Antigravity.
 
 ---
 
 ## 📂 Lokasi Konfigurasi Global Antigravity (3 OS)
 
-Seluruh skill dan plugin akan dipasang secara universal ke direktori konfigurasi global Antigravity pada masing-masing OS:
+Seluruh skill dan plugin dipasang secara universal ke direktori konfigurasi global Antigravity:
 
 | Sistem Operasi | Direktori Skills Global | Direktori Plugins Global |
 | :--- | :--- | :--- |
@@ -50,133 +71,75 @@ Seluruh skill dan plugin akan dipasang secara universal ke direktori konfigurasi
 
 ---
 
-## 💻 Panduan Instalasi (3 OS)
+## 🛠️ Penggunaan Lokal (Bagi Pengelola / Maintainer)
 
-Pilih instruksi instalasi sesuai sistem operasi yang Anda gunakan di bawah ini:
+Jika Anda meng-clone repositori ini ke komputer lokal untuk mengelola atau mengembangkan skill:
 
-### 1. Windows
+```bash
+git clone https://github.com/23Barajapu/skill-agent.git
+cd skill-agent
+```
 
-Tersedia dua opsi cara instalasi yang sangat mudah di Windows:
-
-#### Opsi A: Menggunakan File Batch (Paling Praktis)
-1. Buka **Command Prompt (CMD)** atau klik ganda langsung pada berkas:
-   ```cmd
-   git clone https://github.com/23Barajapu/skill-agent.git
-   cd skill-agent
-   install-skills.bat
-   ```
-2. Jika ingin memasang ulang seluruh skill secara paksa:
-   ```cmd
-   install-skills.bat force
-   ```
-3. Jika ingin sekaligus mengkloning ke-11 repositori ke folder kerja lokal Anda:
-   ```cmd
-   install-skills.bat clone
-   ```
-
-#### Opsi B: Menggunakan PowerShell
-Buka **PowerShell** dan jalankan:
+### Windows (PowerShell)
 ```powershell
-git clone https://github.com/23Barajapu/skill-agent.git
-cd skill-agent
-powershell -ExecutionPolicy Bypass -File .\install-global-skills.ps1
+# Memasang / memperbarui skill ke global:
+powershell -ExecutionPolicy Bypass -File .\scripts\skill.ps1
+
+# Memasang ulang secara paksa (overwrite):
+powershell -ExecutionPolicy Bypass -File .\scripts\skill.ps1 -Force
+
+# Audit integritas dan pemetaan skill:
+powershell -ExecutionPolicy Bypass -File .\scripts\skill.ps1 -Check
+
+# Sinkronisasi update upstream dan push ke backup repo:
+powershell -ExecutionPolicy Bypass -File .\scripts\skill.ps1 -Sync
 ```
-*Opsi tambahan:*
-- Pasang ulang paksa: `.\install-global-skills.ps1 -Force`
-- Simpan repositori ke lokal: `.\install-global-skills.ps1 -CloneLocal`
 
----
-
-### 2. macOS
-
-Di terminal macOS (zsh atau bash), jalankan perintah berikut:
-
+### macOS & Linux (Bash)
 ```bash
-# 1. Clone repositori installer
-git clone https://github.com/23Barajapu/skill-agent.git
-cd skill-agent
+# Berikan izin eksekusi skrip jika belum:
+chmod +x ./scripts/skill.sh
 
-# 2. Berikan izin eksekusi skrip
-chmod +x install-skills.sh
+# Memasang / memperbarui skill:
+./scripts/skill.sh
 
-# 3. Jalankan instalasi
-./install-skills.sh
+# Memasang ulang paksa:
+./scripts/skill.sh --force
+
+# Audit integritas skill:
+./scripts/skill.sh --check
+
+# Sinkronisasi repositori:
+./scripts/skill.sh --sync
 ```
-
-*Opsi tambahan di macOS:*
-- Pasang ulang paksa: `./install-skills.sh --force`
-- Simpan repositori ke lokal: `./install-skills.sh --clone`
 
 ---
 
-### 3. Linux
+## ⚙️ Opsi & Parameter CLI
 
-Dapat dijalankan di semua distribusi Linux (Ubuntu, Debian, Fedora, Arch, Alpine, dll.):
-
-```bash
-# 1. Pastikan git dan curl/bash terpasang
-sudo apt update && sudo apt install -y git   # Untuk Ubuntu / Debian
-# sudo dnf install -y git                    # Untuk Fedora / RHEL
-# sudo pacman -S git                         # Untuk Arch Linux
-
-# 2. Clone repositori installer
-git clone https://github.com/23Barajapu/skill-agent.git
-cd skill-agent
-
-# 3. Berikan izin eksekusi skrip
-chmod +x install-skills.sh
-
-# 4. Jalankan instalasi
-./install-skills.sh
-```
-
-*Opsi tambahan di Linux:*
-- Pasang ulang paksa: `./install-skills.sh --force`
-- Simpan repositori ke lokal: `./install-skills.sh --clone`
-
----
-
-## ⚙️ Opsi & Parameter Instalasi
-
-Installer mendukung beberapa parameter untuk kebutuhan fleksibel:
-
-| Parameter (Windows) | Parameter (macOS / Linux) | Fungsi / Kegunaan |
+| Parameter Windows | Parameter macOS / Linux | Fungsi / Kegunaan |
 | :--- | :--- | :--- |
-| *(tanpa argumen)* | *(tanpa argumen)* | Memasang skill baru. Jika sudah terpasang, akan dilewati agar instan. Jika folder lokal belum ada, otomatis mengunduh dari GitHub. |
-| `-Force` / `force` | `--force` / `-f` | Memasang ulang dan menimpa (*overwrite*) seluruh berkas skill yang sudah ada. |
-| `-CloneLocal` / `clone` | `--clone` | Mengunduh dan mengkloning seluruh repositori Git ke folder kerja lokal saat ini, lalu memasangnya ke Antigravity. |
-| `-TargetDir <path>` | *(ubah variabel `TARGET_DIR`)* | Mengubah folder tujuan instalasi (berguna untuk lingkungan testing atau profil kustom). |
+| *(tanpa argumen)* | *(tanpa argumen)* | Mode instalasi default: memasang skill baru, melewati yang sudah ada, auto-download jika folder lokal belum ada. |
+| `-Force` | `--force` / `-f` | Menimpa (*overwrite*) seluruh berkas skill yang sudah ada. |
+| `-CloneLocal` | `--clone` | Mengkloning seluruh repositori Git ke folder kerja lokal saat ini. |
+| `-Check` | `--check` | Memeriksa integritas pemetaan `$SKILL_MAP` dan repositori lokal. |
+| `-Sync` | `--sync` | Melakukan git pull dari upstream dan git push ke backup repository. |
 
 ---
 
 ## 🔄 Sinkronisasi Berkala (Sync)
 
-Jika Anda ingin memperbarui skill dengan rilis upstream terbaru dari GitHub, jalankan launcher sinkronisasi:
-
-- **Windows**:
-  ```cmd
-  sync-skills.bat
-  ```
-  *Hanya download & merge lokal tanpa push:*
-  ```cmd
-  sync-skills.bat nopush
-  ```
-- **macOS & Linux**:
-  ```bash
-  pwsh -File sync-skills.ps1 -SkipPush -SkipOrgCheck
-  ```
-
-### 🚪 Satu Gerbang Otomatisasi Cloud (GitHub Actions Single Gateway)
-Repositori ini menyediakan satu-satunya gerbang otomatisasi resmi di cloud melalui GitHub Actions (`.github/workflows/sync-skills.yml`):
-- **Otomatis Terjadwal**: Berjalan setiap hari Minggu pukul 00:00 UTC (07:00 WIB) untuk menarik update upstream.
+### 🚪 Satu Gerbang Otomatisasi Cloud (GitHub Actions Gateway)
+Repositori ini menyediakan gerbang otomatisasi resmi di cloud melalui GitHub Actions (`.github/workflows/sync-skills.yml`):
+- **Otomatis Terjadwal**: Berjalan setiap hari Minggu pukul 00:00 UTC (07:00 WIB) untuk menarik pembaruan upstream.
 - **Manual (On-Demand)**: Dapat dipicu kapan saja melalui tab **Actions** $\rightarrow$ **Sync Skills Gateway** $\rightarrow$ **Run workflow**.
-- **Bebas Notifikasi CI Gagal**: Seluruh folder `.github/workflows` bawaan repositori upstream telah dibersihkan secara permanen dari repositori backup `agent-bara/*-bara`, mencegah kegagalan pipeline yang tidak perlu.
+- **Bebas Notifikasi CI Gagal**: Seluruh folder `.github/workflows` upstream telah dibersihkan secara permanen dari repositori backup `agent-bara/*-bara`.
 
 ---
 
-## 📦 Paket Skill yang Tersedia
+## 📦 Paket Skill yang Tersedia (12 Paket)
 
-Seluruh **154 Skill Unik** dikelompokkan ke dalam 11 paket kapabilitas:
+Seluruh **220 Skill Unik** dikelompokkan ke dalam 12 paket kapabilitas:
 
 | Paket | Nama Kategori | Jumlah | Cakupan Utama |
 | :---: | :--- | :---: | :--- |
@@ -191,13 +154,13 @@ Seluruh **154 Skill Unik** dikelompokkan ke dalam 11 paket kapabilitas:
 | **Paket 9** | **Security Audit & Pen-Testing** | 1 Skill | Audit keamanan mendalam, deteksi kerentanan OWASP, inspeksi API, dan pen-testing. |
 | **Paket 10** | **Superpowers Agentic Workflow** | 15 Skill | Metodologi rekayasa agen (brainstorming, spec-first, TDD ketat, git worktree, delegasi paralel). |
 | **Paket 11** | **Chrome DevTools & Browser Automation** | 7 Skill | Otomasi browser via MCP, audit aksesibilitas (a11y), profil LCP/Core Web Vitals, dan memory leak. |
-| **TOTAL** | | **154 Skill** | **11 Repositori Terkurasi** |
+| **Paket 12** | **Remotion Video Engineering** | 67 Skill | Pembuatan video programatik React, optimasi timeline Studio, rendering FFmpeg, dan WebCodecs. |
+| **TOTAL** | | **220 Skill** | **12 Repositori Terkurasi** |
 
 ---
 
 ## 🔌 Plugin Antigravity
 
-Selain skill, repositori ini menyertakan 2 Plugin Antigravity:
 1. **RTK Plugin (`~/.gemini/config/plugins/rtk`)**: Mencegat perintah terminal (`PreToolUse`) dan memangkas log sampah hingga 60%-90%.
 2. **Superpowers Plugin (`~/.gemini/config/plugins/superpowers`)**: Mengarahkan agen pada metodologi rekayasa *spec-driven*, sub-agen paralel, dan verifikasi berbasis bukti.
 
@@ -212,5 +175,4 @@ Untuk panduan rinci setiap skill, deskripsi teknis, contoh prompt pemanggilan, d
 
 ## 📄 Lisensi & Kontributor
 
-Seluruh skill dan plugin dikompilasi dari proyek sumber terbuka terbaik oleh komunitas agentic software engineering (`addyosmani`, `obra`, `emilkowalski`, `mattpocock`, `rtk-ai`, `ChromeDevTools`, dll.). Dilisensikan di bawah lisensi MIT / masing-masing upstream.
-
+Seluruh skill dan plugin dikompilasi dari proyek sumber terbuka terbaik oleh komunitas agentic software engineering (`addyosmani`, `obra`, `emilkowalski`, `mattpocock`, `rtk-ai`, `ChromeDevTools`, `remotion-dev`, dll.). Dilisensikan di bawah lisensi MIT / masing-masing upstream.

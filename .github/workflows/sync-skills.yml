@@ -59,4 +59,4 @@ jobs:
           if ("${{ inputs.skip_push }}" -eq "true") { $params += "-SkipPush" }
           
           Write-Host "Menjalankan Gerbang Sinkronisasi Skill Terpusat..." -ForegroundColor Cyan
-          .\sync-skills.ps1 @params
+          .\scripts\skill.ps1 -Sync @params
