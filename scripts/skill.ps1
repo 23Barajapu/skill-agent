@@ -1,8 +1,3 @@
-﻿<#
-    Universal AI Agent and Skill Suite Installer
-    Repositori resmi: https://github.com/23Barajapu/skill-suite-sch
-#>
-
 function Invoke-AntigravitySkillManager {
     [CmdletBinding(DefaultParameterSetName = "Default")]
     param(
@@ -324,11 +319,15 @@ function Copy-SkillToAgent {
             if (Test-Path $destSkillMd) {
                 $content = Get-Content -Path $destSkillMd -Raw
                 if ($content -notmatch "(?m)^name:\s*") {
-                    if ($content -match "^(?:?
-)?---?
+                    if ($content -match "^(?:
+?
+)?---
+?
 ") {
-                        $content = $content -replace "^(?:?
-)?---?
+                        $content = $content -replace "^(?:
+?
+)?---
+?
 ", "---`nname: $SkillName`n"
                     } else {
                         $content = "---`nname: $SkillName`n---`n" + $content
