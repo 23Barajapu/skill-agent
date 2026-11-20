@@ -1,4 +1,4 @@
-<#
+﻿<#
     Universal AI Agent and Skill Suite Installer
     Repositori resmi: https://github.com/23Barajapu/skill-suite-sch
 #>
@@ -510,6 +510,105 @@ function Get-LocalSources([string]$BaseDir) {
     return @()
 }
 
+function Install-AntigravityPlugins {
+    param(
+        [string]$SourceDir = "",
+        [bool]$ForceOverwrite = $false
+    )
+
+    $installedList = @()
+    if (-not (Test-Path $LOCAL_PLUGINS_DIR)) {
+        New-Item -ItemType Directory -Path $LOCAL_PLUGINS_DIR -Force | Out-Null
+    }
+
+    # 1. Superpowers Plugin
+    $spDest = Join-Path $LOCAL_PLUGINS_DIR "superpowers"
+    $spCandidates = @()
+    if ($SourceDir) { $spCandidates += (Join-Path $SourceDir "superpowers") }
+    $spCandidates += (Join-Path $WORKSPACE_DIR "superpowers")
+
+    $spInstalled = $false
+    foreach ($spSrc in $spCandidates) {
+        $candPlugin = Join-Path $spSrc "plugins\superpowers"
+        $candAnti = Join-Path $spSrc ".antigravity-plugin"
+        if (Test-Path (Join-Path $candPlugin "plugin.json")) {
+            if (-not (Test-Path $spDest) -or $ForceOverwrite) {
+                Copy-Item -Path $candPlugin -Destination $spDest -Recurse -Force
+            }
+            $spInstalled = $true
+            break
+        } elseif (Test-Path (Join-Path $candAnti "plugin.json")) {
+            if (-not (Test-Path $spDest)) { New-Item -ItemType Directory -Path $spDest -Force | Out-Null }
+            Copy-Item -Path (Join-Path $candAnti "plugin.json") -Destination (Join-Path $spDest "plugin.json") -Force
+            $spInstalled = $true
+            break
+        }
+    }
+    if ($spInstalled -or (Test-Path (Join-Path $spDest "plugin.json"))) {
+        $installedList += "Superpowers (v7.0.1)"
+    }
+
+    # 2. RTK Plugin (CLI Token Killer Proxy)
+    $rtkDest = Join-Path $LOCAL_PLUGINS_DIR "rtk"
+    if (-not (Test-Path $rtkDest)) {
+        New-Item -ItemType Directory -Path $rtkDest -Force | Out-Null
+    }
+    $rtkPluginJson = Join-Path $rtkDest "plugin.json"
+    $rtkHooksJson  = Join-Path $rtkDest "hooks.json"
+    $rtkRulesDir   = Join-Path $rtkDest "rules"
+    $rtkAgentsMd   = Join-Path $rtkRulesDir "AGENTS.md"
+
+    if (-not (Test-Path $rtkPluginJson) -or $ForceOverwrite) {
+        $rtkPluginObj = @{
+            name = "rtk"
+            version = "1.0.0"
+            description = "Antigravity plugin for transparent command rewriting and token optimization using rtk"
+        }
+        $rtkPluginObj | ConvertTo-Json | Set-Content -Path $rtkPluginJson -Encoding UTF8
+    }
+
+    if (-not (Test-Path $rtkHooksJson) -or $ForceOverwrite) {
+        $rtkHooksObj = @{
+            "rtk-rewrite" = @{
+                enabled = $true
+                PreToolUse = @(
+                    @{
+                        matcher = "run_command"
+                        hooks = @(
+                            @{
+                                type = "command"
+                                command = "rtk hook antigravity"
+                                timeout = 10
+                            }
+                        )
+                    }
+                )
+            }
+        }
+        $rtkHooksObj | ConvertTo-Json -Depth 5 | Set-Content -Path $rtkHooksJson -Encoding UTF8
+    }
+
+    if (-not (Test-Path $rtkAgentsMd) -or $ForceOverwrite) {
+        if (-not (Test-Path $rtkRulesDir)) { New-Item -ItemType Directory -Path $rtkRulesDir -Force | Out-Null }
+        $rtkRuleContent = @"
+# Command output
+
+Command output here is condensed to save tokens, keeping every signal and
+dropping costly noise. Treat it as the complete result: run commands
+normally, and batch related commands into one call to avoid extra turns.
+Truncated results state their recovery path in their own output. Re-run a
+command as ``rtk proxy <cmd>`` only when its result is unusable: empty when
+output was clearly expected, contradicting its exit code, or garbled.
+"@
+        Set-Content -Path $rtkAgentsMd -Value $rtkRuleContent -Encoding UTF8
+    }
+    if (Test-Path $rtkPluginJson) {
+        $installedList += "RTK (Token Proxy)"
+    }
+
+    return $installedList
+}
+
 # ==============================================================================
 # MODE 1: INSTALL SKILLS (Multi-Agent & Package Selection)
 # ==============================================================================
@@ -623,6 +722,8 @@ function Run-Install {
     }
 
     $sources = @(Get-LocalSources -BaseDir $WORKSPACE_DIR)
+    $pluginsInstalled = @()
+    $hasAntigravity = [bool]($selectedAgents | Where-Object { $_.Key -eq "antigravity" })
 
     # Auto-Download jika belum ada folder lokal
     if ($sources.Count -eq 0) {
@@ -658,6 +759,11 @@ function Run-Install {
                     }
                 }
             }
+
+            # Salin Plugin Antigravity saat unduh sementara
+            if ($hasAntigravity) {
+                $pluginsInstalled = Install-AntigravityPlugins -SourceDir $tempDir -ForceOverwrite $Force
+            }
         } finally {
             Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
         }
@@ -688,24 +794,8 @@ function Run-Install {
         }
 
         # Salin Plugin Antigravity (RTK & Superpowers) jika Antigravity dipilih
-        $hasAntigravity = [bool]($selectedAgents | Where-Object { $_.Key -eq "antigravity" })
         if ($hasAntigravity) {
-            $rtkPlugin = Join-Path $WORKSPACE_DIR "rtk\plugins\rtk"
-            if (-not (Test-Path $rtkPlugin)) { $rtkPlugin = Join-Path $WORKSPACE_DIR "rtk" }
-            if (Test-Path (Join-Path $rtkPlugin "plugin.json")) {
-                $rtkDest = Join-Path $LOCAL_PLUGINS_DIR "rtk"
-                if (-not (Test-Path $rtkDest) -or $Force) {
-                    Copy-Item -Path $rtkPlugin -Destination $rtkDest -Recurse -Force
-                }
-            }
-
-            $spPlugin = Join-Path $WORKSPACE_DIR "superpowers"
-            if (Test-Path (Join-Path $spPlugin "plugin.json")) {
-                $spDest = Join-Path $LOCAL_PLUGINS_DIR "superpowers"
-                if (-not (Test-Path $spDest) -or $Force) {
-                    Copy-Item -Path $spPlugin -Destination $spDest -Recurse -Force
-                }
-            }
+            $pluginsInstalled = Install-AntigravityPlugins -SourceDir $WORKSPACE_DIR -ForceOverwrite $Force
         }
     }
 
@@ -718,8 +808,16 @@ function Run-Install {
             $count = @(Get-ChildItem -Path $destPath).Count
         }
         Write-Host "       - $($ag.Name.PadRight(22)) : $count skill/rule terpasang ($destPath)" -ForegroundColor Green
+        if ($ag.Key -eq "antigravity") {
+            $pluginCount = 0
+            if (Test-Path $LOCAL_PLUGINS_DIR) {
+                $pluginCount = @(Get-ChildItem -Path $LOCAL_PLUGINS_DIR -Directory).Count
+            }
+            $pNames = if ($pluginsInstalled.Count -gt 0) { $pluginsInstalled -join ', ' } else { "RTK, Superpowers" }
+            Write-Host "       - Plugin Antigravity     : $pluginCount plugin aktif ($pNames) ($LOCAL_PLUGINS_DIR)" -ForegroundColor Cyan
+        }
     }
-    Write-Ok "Seluruh skill siap digunakan di semua lingkungan kerja yang dipilih!"
+    Write-Ok "Seluruh skill dan plugin siap digunakan di semua lingkungan kerja yang dipilih!"
 }
 
 # ==============================================================================

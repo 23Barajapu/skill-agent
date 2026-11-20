@@ -296,10 +296,61 @@ ${C_CYAN}======================================================${C_RESET}"
         fi
     done
 
-    # Salin Plugin Antigravity jika Antigravity aktif
+    # Salin & Konfigurasi Plugin Antigravity (RTK & Superpowers)
     if [[ "${target_choice}" =~ ^[Aa]$ || "${target_choice}" =~ "1" || "${target_choice}" =~ "antigravity" ]]; then
-        [[ -d "${WORKSPACE_DIR}/rtk" ]] && cp -R "${WORKSPACE_DIR}/rtk" "${PLUGINS_DIR}/" 2>/dev/null || true
-        [[ -d "${WORKSPACE_DIR}/superpowers" ]] && cp -R "${WORKSPACE_DIR}/superpowers" "${PLUGINS_DIR}/" 2>/dev/null || true
+        mkdir -p "${PLUGINS_DIR}/rtk" "${PLUGINS_DIR}/superpowers"
+
+        # Superpowers Plugin
+        if [[ -d "${WORKSPACE_DIR}/superpowers/plugins/superpowers" ]]; then
+            cp -R "${WORKSPACE_DIR}/superpowers/plugins/superpowers/"* "${PLUGINS_DIR}/superpowers/" 2>/dev/null || true
+        elif [[ -f "${WORKSPACE_DIR}/superpowers/.antigravity-plugin/plugin.json" ]]; then
+            cp "${WORKSPACE_DIR}/superpowers/.antigravity-plugin/plugin.json" "${PLUGINS_DIR}/superpowers/plugin.json" 2>/dev/null || true
+        fi
+
+        # RTK Plugin (CLI Token Killer Proxy)
+        if [[ ! -f "${PLUGINS_DIR}/rtk/plugin.json" ]]; then
+            cat << 'EOF' > "${PLUGINS_DIR}/rtk/plugin.json"
+{
+  "name": "rtk",
+  "version": "1.0.0",
+  "description": "Antigravity plugin for transparent command rewriting and token optimization using rtk"
+}
+EOF
+        fi
+        if [[ ! -f "${PLUGINS_DIR}/rtk/hooks.json" ]]; then
+            cat << 'EOF' > "${PLUGINS_DIR}/rtk/hooks.json"
+{
+  "rtk-rewrite": {
+    "enabled": true,
+    "PreToolUse": [
+      {
+        "matcher": "run_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rtk hook antigravity",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
+EOF
+        fi
+        mkdir -p "${PLUGINS_DIR}/rtk/rules"
+        if [[ ! -f "${PLUGINS_DIR}/rtk/rules/AGENTS.md" ]]; then
+            cat << 'EOF' > "${PLUGINS_DIR}/rtk/rules/AGENTS.md"
+# Command output
+
+Command output here is condensed to save tokens, keeping every signal and
+dropping costly noise. Treat it as the complete result: run commands
+normally, and batch related commands into one call to avoid extra turns.
+Truncated results state their recovery path in their own output. Re-run a
+command as `rtk proxy <cmd>` only when its result is unusable: empty when
+output was clearly expected, contradicting its exit code, or garbled.
+EOF
+        fi
     fi
 
     echo -e "
@@ -310,8 +361,13 @@ ${C_MAGENTA}=== Installation Summary ===${C_RESET}"
         local count
         count=$(find "${t_dir}" -mindepth 1 -maxdepth 1 2>/dev/null | wc -l || echo 0)
         write_info "- ${t_label} : ${count} skill/rule terpasang (${t_dir})"
+        if [[ "${t_label}" == "Google Antigravity" && -d "${PLUGINS_DIR}" ]]; then
+            local p_count
+            p_count=$(find "${PLUGINS_DIR}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l || echo 0)
+            write_info "- Plugin Antigravity     : ${p_count} plugin aktif (RTK, Superpowers) (${PLUGINS_DIR})"
+        fi
     done
-    write_ok "Seluruh skill siap digunakan di semua lingkungan kerja yang dipilih!"
+    write_ok "Seluruh skill dan plugin siap digunakan di semua lingkungan kerja yang dipilih!"
 }
 
 run_check() {
