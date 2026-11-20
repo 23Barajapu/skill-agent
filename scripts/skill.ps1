@@ -1,5 +1,7 @@
-# Antigravity All-in-One Skill Manager for Windows
-# Repositori resmi: https://github.com/23Barajapu/skill-suite-sch
+<#
+    Universal AI Agent and Skill Suite Installer
+    Repositori resmi: https://github.com/23Barajapu/skill-suite-sch
+#>
 
 function Invoke-AntigravitySkillManager {
     [CmdletBinding(DefaultParameterSetName = "Default")]
