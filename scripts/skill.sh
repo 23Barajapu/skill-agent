@@ -4,7 +4,7 @@
 # ==============================================================================
 # Penggunaan:
 #   1. Web Installer Satu Baris (Streaming / Tanpa Clone):
-#      curl -fsSL https://raw.githubusercontent.com/23Barajapu/skill-agent/main/scripts/skill.sh | bash
+#      curl -fsSL https://raw.githubusercontent.com/23Barajapu/skill-suite-sch/main/scripts/skill.sh | bash
 #
 #   2. Eksekusi Lokal:
 #      ./scripts/skill.sh              # Pasang/update skill ke global
@@ -86,18 +86,18 @@ write_fail() { echo -e "  ${C_RED}[XX] $1${C_RESET}"; }
 
 # Daftar repositori remote (Format: name|primary_url|upstream_url|skill_path)
 declare -a REPOS=(
-    "agent-skills|https://github.com/agent-bara/agent-skill-bara.git|https://github.com/addyosmani/agent-skills.git|skills"
-    "anti-slop|https://github.com/agent-bara/antislop-bara.git|https://github.com/miqdadbadjuber/anti-slop.git|skills"
-    "apple-design|https://github.com/agent-bara/apple-design.git|https://github.com/emilkowalski/skills.git|skills"
-    "caveman|https://github.com/agent-bara/caveman-bara.git|https://github.com/JuliusBrussee/caveman.git|skills"
-    "chrome-devtools-mcp|https://github.com/ChromeDevTools/chrome-devtools-mcp.git|https://github.com/ChromeDevTools/chrome-devtools-mcp.git|skills"
-    "engineering-skills|https://github.com/agent-bara/engineering-skills-bara.git|https://github.com/mattpocock/skills.git|skills"
-    "ponytail-bara|https://github.com/agent-bara/ponytail-bara.git|https://github.com/DietrichGebert/ponytail.git|skills"
-    "rea|https://github.com/agent-bara/rea-bara.git|https://github.com/morluto/rea.git|.agents/skills"
-    "rtk|https://github.com/agent-bara/rtk-bara.git|https://github.com/rtk-ai/rtk.git|.claude/skills"
-    "security-audit-skill|https://github.com/agent-bara/security-audit-skill.git|https://github.com/cloudflare/security-audit-skill.git|skills"
-    "superpowers|https://github.com/agent-bara/superpowers-bara.git|https://github.com/obra/superpowers.git|skills"
-    "artemis|https://github.com/agent-bara/artemis-bara.git|https://github.com/google/artemis.git|skills"
+    "agent-skills|https://github.com/18schwarz/agent-skill-sch.git|https://github.com/addyosmani/agent-skills.git|skills"
+    "anti-slop|https://github.com/18schwarz/antislop-sch.git|https://github.com/miqdadbadjuber/anti-slop.git|skills"
+    "apple-design|https://github.com/18schwarz/apple-design.git|https://github.com/emilkowalski/skills.git|skills"
+    "caveman|https://github.com/18schwarz/caveman-sch.git|https://github.com/JuliusBrussee/caveman.git|skills"
+    "chrome-devtools-mcp|https://github.com/18schwarz/chrome-devtools-sch.git|https://github.com/ChromeDevTools/chrome-devtools-mcp.git|skills"
+    "engineering-skills|https://github.com/18schwarz/engineering-skills-sch.git|https://github.com/mattpocock/skills.git|skills"
+    "ponytail-bara|https://github.com/18schwarz/ponytail-sch.git|https://github.com/DietrichGebert/ponytail.git|skills"
+    "rea|https://github.com/18schwarz/rea-sch.git|https://github.com/morluto/rea.git|.agents/skills"
+    "rtk|https://github.com/18schwarz/rtk-sch.git|https://github.com/rtk-ai/rtk.git|.claude/skills"
+    "security-audit-skill|https://github.com/18schwarz/security-audit-skill.git|https://github.com/cloudflare/security-audit-skill.git|skills"
+    "superpowers|https://github.com/18schwarz/superpowers-sch.git|https://github.com/obra/superpowers.git|skills"
+    "artemis|https://github.com/18schwarz/artemis-sch.git|https://github.com/google/artemis.git|skills"
 )
 
 clone_with_fallback() {

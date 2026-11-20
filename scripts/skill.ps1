@@ -1,5 +1,5 @@
-# Antigravity All-in-One Skill Manager (Windows PowerShell)
-# Repositori resmi: https://github.com/23Barajapu/skill-agent
+﻿# Antigravity All-in-One Skill Manager (Windows PowerShell)
+# Repositori resmi: https://github.com/23Barajapu/skill-suite-sch
 
 function Invoke-AntigravitySkillManager {
     [CmdletBinding(DefaultParameterSetName = "Default")]
@@ -72,18 +72,18 @@ $SYNC_STATE_FILE = Join-Path $LOCAL_SKILLS_DIR ".sync-state.json"
 
 # Daftar Repositori Remote untuk Fallback & Dual-Source
 $REMOTE_REPOS = @(
-    @{ Name = "agent-skills";         Url = "https://github.com/agent-bara/agent-skill-bara.git";        UpstreamUrl = "https://github.com/addyosmani/agent-skills.git";        SkillPath = "skills" },
-    @{ Name = "anti-slop";            Url = "https://github.com/agent-bara/antislop-bara.git";           UpstreamUrl = "https://github.com/miqdadbadjuber/anti-slop.git";       SkillPath = "skills" },
-    @{ Name = "apple-design";         Url = "https://github.com/agent-bara/apple-design.git";            UpstreamUrl = "https://github.com/emilkowalski/skills.git";             SkillPath = "skills" },
-    @{ Name = "caveman";              Url = "https://github.com/agent-bara/caveman-bara.git";             UpstreamUrl = "https://github.com/JuliusBrussee/caveman.git";          SkillPath = "skills" },
-    @{ Name = "chrome-devtools-mcp";   Url = "https://github.com/ChromeDevTools/chrome-devtools-mcp.git"; UpstreamUrl = "https://github.com/ChromeDevTools/chrome-devtools-mcp.git"; SkillPath = "skills" },
-    @{ Name = "engineering-skills";   Url = "https://github.com/agent-bara/engineering-skills-bara.git"; UpstreamUrl = "https://github.com/mattpocock/skills.git";            SkillPath = "skills" },
-    @{ Name = "ponytail-bara";        Url = "https://github.com/agent-bara/ponytail-bara.git";           UpstreamUrl = "https://github.com/DietrichGebert/ponytail.git";        SkillPath = "skills" },
-    @{ Name = "rea";                  Url = "https://github.com/agent-bara/rea-bara.git";                 UpstreamUrl = "https://github.com/morluto/rea.git";                     SkillPath = ".agents/skills" },
-    @{ Name = "rtk";                  Url = "https://github.com/agent-bara/rtk-bara.git";                 UpstreamUrl = "https://github.com/rtk-ai/rtk.git";                     SkillPath = ".claude/skills" },
-    @{ Name = "security-audit-skill"; Url = "https://github.com/agent-bara/security-audit-skill.git";    UpstreamUrl = "https://github.com/cloudflare/security-audit-skill.git";SkillPath = "skills" },
-    @{ Name = "superpowers";          Url = "https://github.com/agent-bara/superpowers-bara.git";         UpstreamUrl = "https://github.com/obra/superpowers.git";               SkillPath = "skills" },
-    @{ Name = "artemis";              Url = "https://github.com/agent-bara/artemis-bara.git";             UpstreamUrl = "https://github.com/google/artemis.git";                 SkillPath = "skills" }
+    @{ Name = "agent-skills";         Url = "https://github.com/18schwarz/agent-skill-sch.git";          UpstreamUrl = "https://github.com/addyosmani/agent-skills.git";        SkillPath = "skills" },
+    @{ Name = "anti-slop";            Url = "https://github.com/18schwarz/antislop-sch.git";             UpstreamUrl = "https://github.com/miqdadbadjuber/anti-slop.git";       SkillPath = "skills" },
+    @{ Name = "apple-design";         Url = "https://github.com/18schwarz/apple-design.git";              UpstreamUrl = "https://github.com/emilkowalski/skills.git";             SkillPath = "skills" },
+    @{ Name = "caveman";              Url = "https://github.com/18schwarz/caveman-sch.git";              UpstreamUrl = "https://github.com/JuliusBrussee/caveman.git";          SkillPath = "skills" },
+    @{ Name = "chrome-devtools-mcp";   Url = "https://github.com/18schwarz/chrome-devtools-sch.git";      UpstreamUrl = "https://github.com/ChromeDevTools/chrome-devtools-mcp.git"; SkillPath = "skills" },
+    @{ Name = "engineering-skills";   Url = "https://github.com/18schwarz/engineering-skills-sch.git";   UpstreamUrl = "https://github.com/mattpocock/skills.git";            SkillPath = "skills" },
+    @{ Name = "ponytail-bara";        Url = "https://github.com/18schwarz/ponytail-sch.git";             UpstreamUrl = "https://github.com/DietrichGebert/ponytail.git";        SkillPath = "skills" },
+    @{ Name = "rea";                  Url = "https://github.com/18schwarz/rea-sch.git";                  UpstreamUrl = "https://github.com/morluto/rea.git";                     SkillPath = ".agents/skills" },
+    @{ Name = "rtk";                  Url = "https://github.com/18schwarz/rtk-sch.git";                  UpstreamUrl = "https://github.com/rtk-ai/rtk.git";                     SkillPath = ".claude/skills" },
+    @{ Name = "security-audit-skill"; Url = "https://github.com/18schwarz/security-audit-skill.git";     UpstreamUrl = "https://github.com/cloudflare/security-audit-skill.git";SkillPath = "skills" },
+    @{ Name = "superpowers";          Url = "https://github.com/18schwarz/superpowers-sch.git";          UpstreamUrl = "https://github.com/obra/superpowers.git";               SkillPath = "skills" },
+    @{ Name = "artemis";              Url = "https://github.com/18schwarz/artemis-sch.git";              UpstreamUrl = "https://github.com/google/artemis.git";                 SkillPath = "skills" }
 )
 
 # Pemetaan lengkap 155 Skill untuk Sinkronisasi & Backup
@@ -100,34 +100,35 @@ $SKILL_MAP = @{
                                   "quality-control", "bahasa-indonesia",
                                   "investigate-first", "lean-build", "migration",
                                   "safe-refactor", "surgical-patch", "verify-and-stop")
-        backup_repo          = "https://github.com/agent-bara/caveman-bara.git"
-        backup_branch        = "main"
+        backup_repo          = "https://github.com/18schwarz/caveman-sch.git"
+        backup_branch        = "backup-lokal"
     }
     ponytail = @{
         upstream_repo        = "https://github.com/DietrichGebert/ponytail.git"
         upstream_skill_path  = "skills"
         local_skill_prefixes = @("ponytail", "ponytail-audit", "ponytail-debt",
                                   "ponytail-gain", "ponytail-help", "ponytail-review")
-        backup_repo          = "https://github.com/agent-bara/ponytail-bara.git"
-        backup_branch        = "main"
+        backup_repo          = "https://github.com/18schwarz/ponytail-sch.git"
+        backup_branch        = "backup-lokal"
     }
     antislop = @{
         upstream_repo        = "https://github.com/miqdadbadjuber/anti-slop.git"
         upstream_skill_path  = "skills"
         local_skill_prefixes = @("antislop", "antislop-code", "antislop-copywriting",
                                   "antislop-human", "antislop-layoutmobile", "antislop-ui")
-        backup_repo          = "https://github.com/agent-bara/antislop-bara.git"
-        backup_branch        = "main"
+        backup_repo          = "https://github.com/18schwarz/antislop-sch.git"
+        backup_branch        = "backup-lokal"
     }
     rtk = @{
         upstream_repo        = "https://github.com/rtk-ai/rtk.git"
+        upstream_branch      = "develop"
         upstream_skill_path  = "skills"
         local_skill_prefixes = @("rtk", "code-simplifier", "design-patterns", "issue-triage",
                                   "performance", "pr-review", "pr-triage", "repo-recap",
                                   "rtk-tdd", "rtk-triage", "security-guardian", "ship", "tdd-rust")
         local_plugin_path    = "rtk"
-        backup_repo          = "https://github.com/agent-bara/rtk-bara.git"
-        backup_branch        = "backup-bara"
+        backup_repo          = "https://github.com/18schwarz/rtk-sch.git"
+        backup_branch        = "backup-lokal"
     }
     'engineering-skills' = @{
         upstream_repo        = "https://github.com/mattpocock/skills.git"
@@ -140,9 +141,10 @@ $SKILL_MAP = @{
                                   "setup-ts-deep-modules", "writing-beats", "writing-fragments",
                                   "writing-shape", "git-guardrails-claude-code", "migrate-to-shoehorn",
                                   "scaffold-exercises", "setup-pre-commit", "grill-me", "grilling",
-                                  "handoff", "teach", "to-questionnaire", "wait-what", "writing-for-agents")
-        backup_repo          = "https://github.com/agent-bara/engineering-skills-bara.git"
-        backup_branch        = "backup"
+                                  "handoff", "teach", "to-questionnaire", "wait-what", "writing-for-agents",
+                                  "chief-of-staff", "software-factory")
+        backup_repo          = "https://github.com/18schwarz/engineering-skills-sch.git"
+        backup_branch        = "backup-lokal"
     }
     'agent-skills' = @{
         upstream_repo        = "https://github.com/addyosmani/agent-skills.git"
@@ -157,17 +159,18 @@ $SKILL_MAP = @{
                                   "observability-and-instrumentation", "performance-optimization",
                                   "planning-and-task-breakdown", "security-and-hardening",
                                   "shipping-and-launch", "source-driven-development",
-                                  "spec-driven-development", "test-driven-development", "using-agent-skills")
-        backup_repo          = "https://github.com/agent-bara/agent-skill-bara.git"
-        backup_branch        = "main"
+                                  "spec-driven-development", "test-driven-development", "using-agent-skills",
+                                  "accessibility-engineering")
+        backup_repo          = "https://github.com/18schwarz/agent-skill-sch.git"
+        backup_branch        = "backup-lokal"
     }
     'rea' = @{
         upstream_repo        = "https://github.com/morluto/rea.git"
         upstream_skill_path  = ".agents/skills"
         local_skill_prefixes = @("rea-analysis-optimization", "rea-changelog-update",
                                   "rea-ci-tests-audit", "rea-tool-design", "reverse-engineer-anything")
-        backup_repo          = "https://github.com/agent-bara/rea-bara.git"
-        backup_branch        = "personal-skills"
+        backup_repo          = "https://github.com/18schwarz/rea-sch.git"
+        backup_branch        = "backup-lokal"
     }
     'apple-design' = @{
         upstream_repo        = "https://github.com/emilkowalski/skills.git"
@@ -175,16 +178,17 @@ $SKILL_MAP = @{
         local_skill_prefixes = @("animate", "animate-expo", "animation-performance", "animation-vocabulary",
                                   "apple-design", "ask-sonner", "break-ui", "emil-design-eng",
                                   "find-animation-opportunities", "improve-animations", "mobile-native",
-                                  "pick-ui-library", "review-animations", "write-swift")
-        backup_repo          = "https://github.com/agent-bara/apple-design.git"
-        backup_branch        = "main"
+                                  "pick-ui-library", "review-animations", "write-swift",
+                                  "ask-emil", "choreograph", "gestures", "learn-taste", "remove-animations")
+        backup_repo          = "https://github.com/18schwarz/apple-design.git"
+        backup_branch        = "backup-lokal"
     }
     'security-audit-skill' = @{
         upstream_repo        = "https://github.com/cloudflare/security-audit-skill.git"
         upstream_skill_path  = "skills"
         local_skill_prefixes = @("security-audit")
-        backup_repo          = "https://github.com/agent-bara/security-audit-skill.git"
-        backup_branch        = "main"
+        backup_repo          = "https://github.com/18schwarz/security-audit-skill.git"
+        backup_branch        = "backup-lokal"
     }
     'superpowers' = @{
         upstream_repo        = "https://github.com/obra/superpowers.git"
@@ -195,24 +199,24 @@ $SKILL_MAP = @{
                                   "using-git-worktrees", "using-superpowers",
                                   "verification-before-completion", "writing-plans", "writing-skills")
         local_plugin_path    = "superpowers"
-        backup_repo          = "https://github.com/agent-bara/superpowers-bara.git"
-        backup_branch        = "main"
+        backup_repo          = "https://github.com/18schwarz/superpowers-sch.git"
+        backup_branch        = "backup-lokal"
     }
     'chrome-devtools-mcp' = @{
         upstream_repo        = "https://github.com/ChromeDevTools/chrome-devtools-mcp.git"
         upstream_skill_path  = "skills"
         local_skill_prefixes = @("a11y-debugging", "chrome-devtools", "chrome-devtools-cli",
                                   "cookie-debugging", "debug-optimize-lcp", "memory-leak-debugging",
-                                  "troubleshooting")
-        backup_repo          = "https://github.com/agent-bara/chrome-devtools-mcp-bara.git"
-        backup_branch        = "main"
+                                  "troubleshooting", "inspect-in-devtools")
+        backup_repo          = "https://github.com/18schwarz/chrome-devtools-sch.git"
+        backup_branch        = "backup-lokal"
     }
     artemis = @{
         upstream_repo        = "https://github.com/google/artemis.git"
         upstream_skill_path  = "skills"
         local_skill_prefixes = @("artemis")
-        backup_repo          = "https://github.com/agent-bara/artemis-bara.git"
-        backup_branch        = "main"
+        backup_repo          = "https://github.com/18schwarz/artemis-sch.git"
+        backup_branch        = "backup-lokal"
     }
 }
 
@@ -798,23 +802,48 @@ function Run-Sync {
         if (-not (Test-Path $localRepo)) {
             $localRepo = Join-Path $WORKSPACE_DIR "$skillKey-bara"
         }
+        if (-not (Test-Path $localRepo) -and $skillKey -eq "antislop") {
+            $localRepo = Join-Path $WORKSPACE_DIR "anti-slop"
+        }
 
         if (Test-Path $localRepo) {
             Write-Info "Menarik update upstream..."
-            $pullRes = Invoke-GitWithSpinner -Message "git pull upstream..." -WorkDir $localRepo -GitArgs @("pull", "--no-edit", "--quiet")
+            $remotes = git -C $localRepo remote
+            $upBranch = if ($cfg.ContainsKey('upstream_branch') -and $cfg.upstream_branch) { $cfg.upstream_branch } else { "main" }
+            $pullArgs = if ($remotes -contains "upstream") { @("pull", "upstream", $upBranch, "--no-edit", "--strategy-option=theirs", "--quiet") } else { @("pull", "--no-edit", "--strategy-option=theirs", "--quiet") }
+            $pullRes = Invoke-GitWithSpinner -Message "git pull upstream..." -WorkDir $localRepo -GitArgs $pullArgs
             if ($pullRes.ExitCode -eq 0) {
                 Write-Ok "Local repository up-to-date."
             } else {
-                Write-Info "Status pull: $($pullRes.Output)"
+                # Selesaikan otomatis jika ada unmerged paths konflik menggunakan versi pemilik asli
+                $unmerged = git -C $localRepo status --porcelain 2>$null | Where-Object { $_ -match '^(U.|.U|DD|AA)' }
+                if ($unmerged) {
+                    Write-Info "Menyelesaikan konflik secara otomatis menggunakan versi upstream pemilik asli..."
+                    & git -C $localRepo checkout --theirs . 2>&1 | Out-Null
+                    & git -C $localRepo add . 2>&1 | Out-Null
+                    & git -C $localRepo commit -m "Merge upstream updates (use original owner version)" --quiet 2>&1 | Out-Null
+                    Write-Ok "Konflik berhasil diselesaikan menggunakan versi pemilik asli."
+                } else {
+                    Write-Info "Status pull: $($pullRes.Output)"
+                }
             }
 
             if (-not $SkipPush -and -not $DryRun) {
-                Write-Info "Push ke backup repo..."
-                $pushRes = Invoke-GitWithSpinner -Message "git push backup..." -WorkDir $localRepo -GitArgs @("push", "origin", $cfg.backup_branch, "--quiet")
-                if ($pushRes.ExitCode -eq 0) {
-                    Write-Ok "Backup repo tersinkronisasi."
+                if (-not [string]::IsNullOrWhiteSpace($cfg.backup_repo) -and ($remotes -contains "origin")) {
+                    $originUrl = (git -C $localRepo remote get-url origin 2>$null).Trim()
+                    if ($originUrl -and $originUrl -ne $cfg.upstream_repo) {
+                        Write-Info "Push ke backup repo ($originUrl)..."
+                        $pushRes = Invoke-GitWithSpinner -Message "git push backup..." -WorkDir $localRepo -GitArgs @("push", "origin", $cfg.backup_branch, "--quiet")
+                        if ($pushRes.ExitCode -eq 0) {
+                            Write-Ok "Backup repo tersinkronisasi."
+                        } else {
+                            Write-Info "Status push: $($pushRes.Output)"
+                        }
+                    } else {
+                        Write-Info "Origin belum diset ke backup repo (masih upstream publik). Melewati push."
+                    }
                 } else {
-                    Write-Info "Status push: $($pushRes.Output)"
+                    Write-Info "Tidak ada backup repo yang dikonfigurasi untuk '$skillKey'. Melewati push."
                 }
             }
         } else {
