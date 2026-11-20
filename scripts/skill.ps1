@@ -1,4 +1,4 @@
-﻿# Antigravity All-in-One Skill Manager (Windows PowerShell)
+# Antigravity All-in-One Skill Manager for Windows
 # Repositori resmi: https://github.com/23Barajapu/skill-suite-sch
 
 function Invoke-AntigravitySkillManager {
